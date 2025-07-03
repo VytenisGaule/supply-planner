@@ -1,0 +1,264 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Install Dependencies",
+            "type": "shell",
+            "command": "pip",
+            "args": [
+                "install",
+                "-r",
+                "requirements.txt"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Django: Migrate",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "manage.py",
+                "migrate"
+            ],
+            "group": "build",
+            "dependsOn": "Django: Make Migrations",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Django: Make Migrations",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "manage.py",
+                "makemigrations"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Django: Run Server",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "manage.py",
+                "runserver",
+                "0.0.0.0:8000"
+            ],
+            "group": "build",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Django: Create Superuser",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "manage.py",
+                "createsuperuser"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Data: Import Daily Data",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "manage.py",
+                "import_daily_data"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "pytest",
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Format Code (Black)",
+            "type": "shell",
+            "command": "black",
+            "args": [
+                "."
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Django: Collect Messages",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "manage.py",
+                "makemessages",
+                "-l",
+                "lt",
+                "--ignore",
+                "virtualEnvironment"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Django: Compile Messages",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "manage.py",
+                "compilemessages",
+                "-l",
+                "lt",
+                "--ignore",
+                "virtualEnvironment"
+            ],
+            "group": "build",
+            "dependsOn": "Django: Collect Messages",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Tailwind: Install",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "install",
+                "-D",
+                "tailwindcss",
+                "@tailwindcss/forms",
+                "@tailwindcss/typography"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Tailwind: Init",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "tailwindcss",
+                "init"
+            ],
+            "group": "build",
+            "dependsOn": "Tailwind: Install",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Tailwind: Build",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "tailwindcss",
+                "-i",
+                "./static/css/input.css",
+                "-o",
+                "./static/css/output.css",
+                "--watch"
+            ],
+            "group": "build",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Tailwind: Build Production",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "tailwindcss",
+                "-i",
+                "./static/css/input.css",
+                "-o",
+                "./static/css/output.css",
+                "--minify"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

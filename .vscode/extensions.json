@@ -1,0 +1,18 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.flake8",
+        "ms-python.pylint",
+        "ms-toolsai.jupyter",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-json",
+        "ms-python.debugpy",
+        "batisteo.vscode-django",
+        "thebarkman.vscode-djaneiro",
+        "ms-vscode-remote.remote-containers"
+    ]
+}

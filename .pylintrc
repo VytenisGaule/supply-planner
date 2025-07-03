@@ -1,0 +1,16 @@
+[MASTER]
+load-plugins=pylint_django
+
+[PYLINT_DJANGO]
+django-settings-module=core.settings
+
+[TYPECHECK]
+# Django's dynamic attributes
+generated-members=objects,DoesNotExist,id,pk,_meta,MultipleObjectsReturned
+
+# Ignore missing member errors for Django model relationships
+ignored-classes=Model,QuerySet
+
+[MESSAGES CONTROL]
+# Disable specific Django-related warnings
+disable=missing-docstring,too-few-public-methods

@@ -1,0 +1,14 @@
+/virtualEnvironment/
+env
+/static/
+# Django #
+*.log
+*.pot
+*.pyc
+__pycache__
+db.sqlite3 
+.env
+media
+.DS_Store
+locale
+*.backup

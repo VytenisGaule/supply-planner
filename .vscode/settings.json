@@ -1,0 +1,56 @@
+{
+    "python.defaultInterpreterPath": "./virtualEnvironment/bin/python",
+    "python.formatting.provider": "black",
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.sortImports.args": [
+        "--profile",
+        "black"
+    ],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "files.associations": {
+        "*.html": "html",
+        "**/*.html": "html"
+    },
+    "emmet.includeLanguages": {
+        "django-html": "html"
+    },
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/migrations": false
+    },
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "app/tests.py",
+        "-v",
+        "--tb=short",
+        "--ds=core.settings"
+    ],
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "python.testing.cwd": "${workspaceFolder}",
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.testing.env": {
+        "DJANGO_SETTINGS_MODULE": "core.settings"
+    },
+    "python.terminal.activateEnvironment": true,
+    "terminal.integrated.env.linux": {
+        "DJANGO_SETTINGS_MODULE": "core.settings"
+    },
+    "terminal.integrated.env.osx": {
+        "DJANGO_SETTINGS_MODULE": "core.settings"
+    },
+    "terminal.integrated.env.windows": {
+        "DJANGO_SETTINGS_MODULE": "core.settings"
+    },
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "cSpell.words": [
+        "kodas",
+        "pavadinimas"
+    ]
+}
