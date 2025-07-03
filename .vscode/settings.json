@@ -52,5 +52,10 @@
     "cSpell.words": [
         "kodas",
         "pavadinimas"
-    ]
+    ],
+    "git.ignoredRepositories": [
+        "/home/vytenis/Documents/pairs"
+    ],
+    "git.autoRepositoryDetection": false,
+    "git.repositories.discovery.maxDepth": 1
 }
