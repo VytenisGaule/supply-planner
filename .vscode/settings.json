@@ -51,7 +51,9 @@
     "postman.settings.dotenv-detection-notification-visibility": false,
     "cSpell.words": [
         "kodas",
-        "pavadinimas"
+        "lookback",
+        "pavadinimas",
+        "stockout"
     ],
     "git.ignoredRepositories": [
         "/home/vytenis/Documents/pairs"

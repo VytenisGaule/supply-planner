@@ -66,7 +66,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('kodas', 'pavadinimas')
     list_filter = ('category', 'suppliers')
     ordering = ['kodas']
-    readonly_fields = ('last_purchase_price', 'currency', 'average_daily_purchase', 'supplier_list')
+    readonly_fields = ('last_purchase_price', 'currency', 'supplier_list')
     
     def supplier_list(self, obj):
         """Display comma-separated list of suppliers"""

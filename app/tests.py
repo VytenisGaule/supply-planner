@@ -1206,3 +1206,485 @@ class FixtureTestCase(TestCase):
         
         total_products = expensive_products.count() + cheap_products.count()
         self.assertEqual(total_products, Product.objects.count())
+
+
+class DailyMetricsTestCase(TestCase):
+    """Test cases for DailyMetrics model and potential sales calculations"""
+    
+    def setUp(self):
+        """Set up test data"""
+        from datetime import date, timedelta
+        from app.models import DailyMetrics
+        
+        # Create test product
+        self.category = Category.objects.create(
+            category_code="TEST_CAT",
+            name="Test Category"
+        )
+        self.product = Product.objects.create(
+            kodas="TEST_PROD_001",
+            pavadinimas="Test Product",
+            category=self.category,
+            last_purchase_price=Decimal('50.00'),
+            lead_time=30
+        )
+        
+        # Create test date range
+        self.today = date.today()
+        self.base_date = self.today - timedelta(days=60)
+        
+        # Create daily metrics with varying stock and sales patterns
+        self.create_test_metrics()
+    
+    def create_test_metrics(self):
+        """Create test metrics with realistic patterns"""
+        from datetime import timedelta
+        from app.models import DailyMetrics
+        
+        # Days 1-20: Good stock, consistent sales
+        for i in range(20):
+            date_obj = self.base_date + timedelta(days=i)
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=date_obj,
+                sales_quantity=15 + (i % 5),  # 15-19 sales per day
+                stock=100 - (i * 2),  # Decreasing stock
+                is_stockout=False
+            )
+        
+        # Days 21-25: Stockout period
+        for i in range(21, 26):
+            date_obj = self.base_date + timedelta(days=i)
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=date_obj,
+                sales_quantity=0,  # No sales during stockout
+                stock=0,
+                is_stockout=True
+            )
+        
+        # Days 26-40: Restocked, good sales again
+        for i in range(26, 41):
+            date_obj = self.base_date + timedelta(days=i)
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=date_obj,
+                sales_quantity=12 + (i % 4),  # 12-15 sales per day
+                stock=80 - ((i-26) * 2),
+                is_stockout=False
+            )
+    
+    def test_daily_metrics_creation(self):
+        """Test basic DailyMetrics creation"""
+        from app.models import DailyMetrics
+        
+        metric = DailyMetrics.objects.create(
+            product=self.product,
+            date=self.today,
+            sales_quantity=10,
+            stock=50
+        )
+        
+        self.assertEqual(metric.product, self.product)
+        self.assertEqual(metric.sales_quantity, 10)
+        self.assertEqual(metric.stock, 50)
+        self.assertFalse(metric.is_stockout)
+    
+    def test_stockout_flag_auto_calculation(self):
+        """Test that is_stockout flag is automatically set"""
+        from app.models import DailyMetrics
+        from datetime import timedelta
+        
+        # Test with stock > 0
+        metric1 = DailyMetrics.objects.create(
+            product=self.product,
+            date=self.today,
+            sales_quantity=10,
+            stock=50
+        )
+        self.assertFalse(metric1.is_stockout)
+        
+        # Test with stock = 0
+        metric2 = DailyMetrics.objects.create(
+            product=self.product,
+            date=self.today - timedelta(days=1),
+            sales_quantity=0,
+            stock=0
+        )
+        self.assertTrue(metric2.is_stockout)
+    
+    def test_lost_sales_calculation(self):
+        """Test automatic lost sales calculation"""
+        from app.models import DailyMetrics
+        from datetime import timedelta
+        
+        metric = DailyMetrics.objects.create(
+            product=self.product,
+            date=self.today,
+            sales_quantity=5,
+            stock=0,
+            potential_sales=15.0
+        )
+        
+        # lost_sales should be potential - actual = 15 - 5 = 10
+        self.assertEqual(metric.lost_sales, 10.0)
+        
+        # Test with potential < actual (should be 0)
+        metric2 = DailyMetrics.objects.create(
+            product=self.product,
+            date=self.today - timedelta(days=1),
+            sales_quantity=20,
+            stock=50,
+            potential_sales=15.0
+        )
+        self.assertEqual(metric2.lost_sales, 0.0)
+    
+    def test_calculate_potential_sales_for_good_stock_day(self):
+        """Test potential sales calculation for days with adequate stock"""
+        from app.models import DailyMetrics
+        from datetime import timedelta
+        
+        # For a day with good stock, potential should equal actual sales
+        good_stock_date = self.base_date + timedelta(days=10)
+        potential = DailyMetrics.calculate_potential_sales_for_date(
+            self.product, good_stock_date, lookback_days=30
+        )
+        
+        # Should return actual sales for that day (15 + (10 % 5) = 15)
+        expected_sales = 15 + (10 % 5)  # From our test data pattern
+        self.assertEqual(potential, expected_sales)
+    
+    def test_calculate_potential_sales_for_stockout_day(self):
+        """Test potential sales calculation for stockout days"""
+        from app.models import DailyMetrics
+        from datetime import timedelta
+        
+        # For a stockout day, should calculate average from recent good days
+        stockout_date = self.base_date + timedelta(days=23)  # Middle of stockout period
+        potential = DailyMetrics.calculate_potential_sales_for_date(
+            self.product, stockout_date, lookback_days=30
+        )
+        
+        # Should be average of days 1-20 (good stock days)
+        # Sales range from 15-19, average should be around 17
+        self.assertGreater(potential, 15)
+        self.assertLess(potential, 20)
+    
+    def test_calculate_potential_sales_no_data(self):
+        """Test potential sales calculation when no data exists"""
+        from app.models import DailyMetrics
+        from datetime import timedelta
+        
+        # Test with a date that doesn't exist
+        future_date = self.today + timedelta(days=30)
+        potential = DailyMetrics.calculate_potential_sales_for_date(
+            self.product, future_date, lookback_days=30
+        )
+        
+        self.assertEqual(potential, 0)
+    
+    def test_update_all_potential_sales(self):
+        """Test updating potential sales for all metrics"""
+        from datetime import timedelta
+        
+        # Update potential sales for a date range
+        start_date = self.base_date
+        end_date = self.base_date + timedelta(days=40)
+        
+        self.product.update_all_potential_sales(start_date, end_date)
+        
+        # Check that potential sales were calculated
+        metrics = self.product.daily_metrics.filter(
+            date__range=[start_date, end_date]
+        )
+        
+        for metric in metrics:
+            self.assertIsNotNone(metric.potential_sales)
+            self.assertGreaterEqual(metric.potential_sales, 0)
+            
+            # For good stock days, potential should equal actual
+            if not metric.is_stockout and metric.stock > 0:
+                self.assertEqual(metric.potential_sales, metric.sales_quantity)
+    
+    def test_average_daily_demand_calculation(self):
+        """Test the new average_daily_demand method"""
+        from datetime import timedelta
+        
+        # First update potential sales
+        start_date = self.base_date
+        end_date = self.base_date + timedelta(days=40)
+        self.product.update_all_potential_sales(start_date, end_date)
+        
+        # Calculate average daily demand
+        avg_demand = self.product.average_daily_demand(days_back=50)
+        
+        # Should be a positive number based on our test data
+        self.assertGreater(avg_demand, 0)
+        self.assertIsInstance(avg_demand, float)
+    
+    def test_average_daily_demand_no_data(self):
+        """Test average_daily_demand when no potential sales data exists"""
+        # Create a new product with no metrics
+        new_product = Product.objects.create(
+            kodas="NEW_PROD",
+            pavadinimas="New Product",
+            last_purchase_price=Decimal('25.00')
+        )
+        
+        avg_demand = new_product.average_daily_demand()
+        self.assertEqual(avg_demand, 0.0)
+    
+    def test_average_daily_demand_custom_period(self):
+        """Test average_daily_demand with custom time periods"""
+        from datetime import timedelta
+        
+        # Update potential sales
+        self.product.update_all_potential_sales()
+        
+        # Test different time periods
+        avg_7d = self.product.average_daily_demand(days_back=7)
+        avg_30d = self.product.average_daily_demand(days_back=30)
+        avg_365d = self.product.average_daily_demand(days_back=365)
+        
+        # All should be valid floats
+        self.assertIsInstance(avg_7d, float)
+        self.assertIsInstance(avg_30d, float)
+        self.assertIsInstance(avg_365d, float)
+        
+        # 7-day should be based on recent data (might be 0 if no recent data)
+        self.assertGreaterEqual(avg_7d, 0)
+    
+    def test_unique_constraint_product_date(self):
+        """Test that the unique constraint on (product, date) works"""
+        from app.models import DailyMetrics
+        from django.db import IntegrityError
+        
+        # Create first metric
+        DailyMetrics.objects.create(
+            product=self.product,
+            date=self.today,
+            sales_quantity=10,
+            stock=50
+        )
+        
+        # Try to create duplicate - should fail
+        with self.assertRaises(IntegrityError):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.today,  # Same date
+                sales_quantity=20,
+                stock=30
+            )
+    
+    def test_daily_metrics_str_method(self):
+        """Test DailyMetrics __str__ method"""
+        from app.models import DailyMetrics
+        
+        metric = DailyMetrics.objects.create(
+            product=self.product,
+            date=self.today,
+            sales_quantity=10,
+            stock=50
+        )
+        
+        expected_str = f"{self.product.kodas} - {self.today} (Stock: 50, Sales: 10)"
+        self.assertEqual(str(metric), expected_str)
+    
+    def test_complex_potential_sales_scenario(self):
+        """Test complex scenario with multiple stockout periods"""
+        from app.models import DailyMetrics
+        from datetime import timedelta
+        
+        # Create a complex pattern: good -> stockout -> good -> stockout
+        test_product = Product.objects.create(
+            kodas="COMPLEX_TEST",
+            pavadinimas="Complex Test Product",
+            last_purchase_price=Decimal('75.00')
+        )
+        
+        base = self.today - timedelta(days=50)
+        
+        # Week 1: Good sales (20 per day)
+        for i in range(7):
+            DailyMetrics.objects.create(
+                product=test_product,
+                date=base + timedelta(days=i),
+                sales_quantity=20,
+                stock=100 - (i * 5),
+                is_stockout=False
+            )
+        
+        # Week 2: Stockout
+        for i in range(7, 14):
+            DailyMetrics.objects.create(
+                product=test_product,
+                date=base + timedelta(days=i),
+                sales_quantity=0,
+                stock=0,
+                is_stockout=True
+            )
+        
+        # Week 3: Good sales again (18 per day)
+        for i in range(14, 21):
+            DailyMetrics.objects.create(
+                product=test_product,
+                date=base + timedelta(days=i),
+                sales_quantity=18,
+                stock=90 - ((i-14) * 4),
+                is_stockout=False
+            )
+        
+        # Update potential sales
+        test_product.update_all_potential_sales()
+        
+        # Check stockout period got reasonable potential sales
+        stockout_metrics = test_product.daily_metrics.filter(is_stockout=True)
+        for metric in stockout_metrics:
+            # Should be around 19-20 (average of good periods)
+            self.assertGreater(metric.potential_sales, 17)
+            self.assertLess(metric.potential_sales, 22)
+            # Lost sales should equal potential sales (since actual = 0)
+            self.assertEqual(metric.lost_sales, metric.potential_sales)
+        
+        # Calculate average demand
+        avg_demand = test_product.average_daily_demand()
+        
+        # Should be around 19 (mix of 20s, 18s, and calculated stockout potentials)
+        self.assertGreater(avg_demand, 17)
+        self.assertLess(avg_demand, 22)
+
+
+class InventoryAnalyticsTestCase(TestCase):
+    """Test cases for inventory analytics and business logic"""
+    
+    def setUp(self):
+        """Set up test data for analytics testing"""
+        from datetime import date, timedelta
+        from app.models import DailyMetrics
+        
+        self.category = Category.objects.create(
+            category_code="ANALYTICS",
+            name="Analytics Test Category"
+        )
+        
+        # Create multiple products for testing
+        self.fast_moving = Product.objects.create(
+            kodas="FAST_001",
+            pavadinimas="Fast Moving Product",
+            category=self.category,
+            last_purchase_price=Decimal('30.00'),
+            lead_time=14
+        )
+        
+        self.slow_moving = Product.objects.create(
+            kodas="SLOW_001", 
+            pavadinimas="Slow Moving Product",
+            category=self.category,
+            last_purchase_price=Decimal('100.00'),
+            lead_time=60
+        )
+        
+        # Create metrics for last 30 days
+        self.base_date = date.today() - timedelta(days=30)
+        self.create_analytics_test_data()
+    
+    def create_analytics_test_data(self):
+        """Create realistic test data for analytics"""
+        from datetime import timedelta
+        from app.models import DailyMetrics
+        
+        # Fast moving product: consistent high sales
+        for i in range(30):
+            date_obj = self.base_date + timedelta(days=i)
+            
+            # Occasional stockouts for fast moving
+            if i in [10, 11, 20]:  # 3 stockout days
+                DailyMetrics.objects.create(
+                    product=self.fast_moving,
+                    date=date_obj,
+                    sales_quantity=0,
+                    stock=0,
+                    is_stockout=True
+                )
+            else:
+                DailyMetrics.objects.create(
+                    product=self.fast_moving,
+                    date=date_obj,
+                    sales_quantity=25 + (i % 5),  # 25-29 per day
+                    stock=max(1, 200 - (i * 6)),  # Ensure stock never goes to 0 accidentally
+                    is_stockout=False
+                )
+        
+        # Slow moving product: low, irregular sales
+        for i in range(30):
+            date_obj = self.base_date + timedelta(days=i)
+            
+            # Only sell every few days
+            sales = 3 if i % 3 == 0 else 0
+            DailyMetrics.objects.create(
+                product=self.slow_moving,
+                date=date_obj,
+                sales_quantity=sales,
+                stock=100,  # Always plenty in stock
+                is_stockout=False
+            )
+    
+    def test_stockout_analysis(self):
+        """Test analysis of stockout patterns"""
+        from app.models import DailyMetrics
+        
+        # Update potential sales for analysis
+        self.fast_moving.update_all_potential_sales()
+        self.slow_moving.update_all_potential_sales()
+        
+        # Count stockouts
+        fast_stockouts = self.fast_moving.daily_metrics.filter(is_stockout=True).count()
+        slow_stockouts = self.slow_moving.daily_metrics.filter(is_stockout=True).count()
+        
+        self.assertEqual(fast_stockouts, 3)  # We created 3 stockout days
+        self.assertEqual(slow_stockouts, 0)   # No stockouts for slow moving
+        
+        # Calculate lost sales
+        fast_lost_sales = sum(
+            metric.lost_sales or 0 
+            for metric in self.fast_moving.daily_metrics.all()
+        )
+        slow_lost_sales = sum(
+            metric.lost_sales or 0 
+            for metric in self.slow_moving.daily_metrics.all()
+        )
+        
+        # Fast moving should have significant lost sales
+        self.assertGreater(fast_lost_sales, 0)
+        # Slow moving should have minimal/no lost sales
+        self.assertEqual(slow_lost_sales, 0)
+    
+    def test_demand_comparison(self):
+        """Test comparing demand between products"""
+        # Update potential sales
+        self.fast_moving.update_all_potential_sales()
+        self.slow_moving.update_all_potential_sales()
+        
+        # Calculate average demands
+        fast_demand = self.fast_moving.average_daily_demand()
+        slow_demand = self.slow_moving.average_daily_demand()
+        
+        # Fast moving should have much higher demand
+        self.assertGreater(fast_demand, slow_demand)
+        self.assertGreater(fast_demand, 20)  # Should be around 25-27
+        self.assertLess(slow_demand, 5)     # Should be around 1-2
+    
+    def test_service_level_calculation(self):
+        """Test calculating service level (availability)"""
+        from app.models import DailyMetrics
+        
+        # Service level = (total days - stockout days) / total days
+        total_days = self.fast_moving.daily_metrics.count()
+        stockout_days = self.fast_moving.daily_metrics.filter(is_stockout=True).count()
+        
+        service_level = ((total_days - stockout_days) / total_days) * 100
+        
+        # Should be 90% (27 good days out of 30)
+        expected_service_level = ((30 - 3) / 30) * 100
+        self.assertAlmostEqual(service_level, expected_service_level, places=1)
+        self.assertAlmostEqual(service_level, 90.0, places=1)
