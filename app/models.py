@@ -194,7 +194,7 @@ class DailyMetrics(models.Model):
     date = models.DateField()
     
     # Core data
-    sales_quantity = models.IntegerField(default=0, null=True, blank=True, help_text="Quantity sold minus quantity returned")
+    sales_quantity = models.IntegerField(default=0, null=True, blank=True, help_text="Quantity sold - returned")
     stock = models.PositiveIntegerField(default=0, null=True, blank=True, help_text="Quantity in main warehouse")
     
     # Potential sales calculation (independent of product averages)
