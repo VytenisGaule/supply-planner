@@ -160,7 +160,6 @@ class Product(models.Model):
     def update_all_potential_sales(self, date_from: datetime.date=None, date_to: datetime.date=None):
         """
         Calculate potential sales for all daily metrics
-        This runs INDEPENDENTLY of average_daily_purchase to avoid circular dependency
         """
         if not date_to:
             date_to: datetime.date = datetime.now().date()
@@ -227,7 +226,6 @@ class DailyMetrics(models.Model):
     def calculate_potential_sales_for_date(cls, product: Product, target_date: datetime.date, lookback_days: int=30) -> float:
         """
         Calculate potential sales for a specific date using recent adequate-stock periods
-        This is INDEPENDENT of product.average_daily_purchase to avoid circular dependency
         """
         
         start_date: datetime.date = target_date - timedelta(days=lookback_days)
