@@ -78,11 +78,11 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(DailyMetrics)
 class DailyMetricsAdmin(admin.ModelAdmin):
     """Daily metrics admin"""
-    list_display = ('product', 'date', 'sales_quantity', 'stock', 'is_stockout')
+    list_display = ('product', 'date', 'sales_quantity', 'stock')
     search_fields = ('product__kodas', 'product__pavadinimas')
     list_filter = ('product__category', 'product__suppliers',)
     ordering = ['-date']
-    readonly_fields = ('potential_sales', 'lost_sales', 'is_stockout')
+    readonly_fields = ('potential_sales', 'lost_sales')
     
     def get_queryset(self, request):
         """Optimize queryset to include related product data"""

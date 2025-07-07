@@ -201,7 +201,6 @@ class DailyMetrics(models.Model):
                                         help_text="Potential sales based on recent sales trend when stock was adequate")
     lost_sales = models.FloatField(default=0, null=True, blank=True, 
                                    help_text="Lost sales = potential_sales - actual sales_quantity")
-    is_stockout = models.BooleanField(default=False, help_text="True if stock was 0")
     
     class Meta:
         """Meta class for Daily_Metrics model"""
@@ -209,12 +208,10 @@ class DailyMetrics(models.Model):
         ordering = ['-date']
         indexes = [
             models.Index(fields=['product', 'date']),
-            models.Index(fields=['is_stockout']),
         ]
     
     def save(self, *args, **kwargs):
         """Auto-calculate basic metrics"""
-        self.is_stockout = (self.stock == 0)
         
         # Calculate lost sales if potential_sales is provided
         if self.potential_sales is not None and self.sales_quantity is not None:
@@ -230,12 +227,12 @@ class DailyMetrics(models.Model):
         
         start_date: datetime.date = target_date - timedelta(days=lookback_days)
         try:
-            target_metric = cls.objects.get(product=product, date=target_date)
+            target_metric: QuerySet = cls.objects.get(product=product, date=target_date)
         except cls.DoesNotExist:
             return 0
         
         # For good stock, potential == actual
-        if not target_metric.is_stockout and target_metric.stock > 0:
+        if target_metric.stock > 0:
             if not target_metric.sales_quantity:
                 return 0
             return target_metric.sales_quantity
@@ -244,7 +241,6 @@ class DailyMetrics(models.Model):
         recent_good_days: QuerySet = cls.objects.filter(
             product=product,
             date__range=[start_date, target_date - timedelta(days=1)],
-            is_stockout=False,
             stock__gt=0,  # Had some stock
             sales_quantity__isnull=False
         )
