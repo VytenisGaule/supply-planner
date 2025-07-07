@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 from decimal import Decimal
 import random
 import string
-from app.models import User, Category, Product, Supplier
+from app.models import User, Category, Product, Supplier, DailyMetrics
 
 
 class UserModelTest(TestCase):

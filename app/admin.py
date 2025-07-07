@@ -1,5 +1,5 @@
 from django.contrib import admin
-from app.models import User, Category, Product, Supplier
+from app.models import User, Category, Product, Supplier, DailyMetrics
 
 # Register your models here.
 
@@ -66,11 +66,24 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('kodas', 'pavadinimas')
     list_filter = ('category', 'suppliers')
     ordering = ['kodas']
-    readonly_fields = ('last_purchase_price', 'currency', 'average_daily_purchase', 'supplier_list')
+    readonly_fields = ('last_purchase_price', 'currency', 'supplier_list')
     
     def supplier_list(self, obj):
         """Display comma-separated list of suppliers"""
         return obj.get_supplier_names() or "No suppliers"
     
     supplier_list.short_description = 'Suppliers'
+    
 
+@admin.register(DailyMetrics)
+class DailyMetricsAdmin(admin.ModelAdmin):
+    """Daily metrics admin"""
+    list_display = ('product', 'date', 'sales_quantity', 'stock', 'is_stockout')
+    search_fields = ('product__kodas', 'product__pavadinimas')
+    list_filter = ('product__category', 'product__suppliers',)
+    ordering = ['-date']
+    readonly_fields = ('potential_sales', 'lost_sales', 'is_stockout')
+    
+    def get_queryset(self, request):
+        """Optimize queryset to include related product data"""
+        return super().get_queryset(request).select_related('product')
