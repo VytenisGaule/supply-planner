@@ -1,16 +1,20 @@
 from datetime import date
+from decimal import Decimal
 from typing import Optional
-from app.models import DailyMetrics, Product
+from django.db.models import QuerySet, Avg
 
 
-def get_last_good_stock_date(product: Product, min_stock: int = 1) -> Optional[date]:
+def get_average_potential_sales(daily_metrics: QuerySet, min_stock: int) -> float:
     """
-    Find date when product stock above min_stock.
+    Calculate average potential sales from a QuerySet of daily metrics
     """
-    last_good_stock: DailyMetrics = DailyMetrics.objects.filter(
-        product=product,
+    good_stock_metrics: QuerySet = daily_metrics.filter(
         stock__gte=min_stock,
-    ).order_by('-date').first()
-    if not last_good_stock:
-        return None
-    return last_good_stock.date
+        sales_quantity__isnull=False  # exclude missing data
+    )
+    
+    if good_stock_metrics.exists():
+        avg_sales: Optional[Decimal] = good_stock_metrics.aggregate(avg=Avg('sales_quantity'))['avg']
+        return float(avg_sales) if avg_sales else 0.0
+    else:
+        return 0.0

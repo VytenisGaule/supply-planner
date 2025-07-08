@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
-from typing import Union
+from decimal import Decimal
+from typing import Optional, Union
 from django.db import models
 from django.db.models import QuerySet
 from django.contrib.auth.models import AbstractUser
 from django.db.models import Avg
+from app.helpers.utils import get_average_potential_sales
 
 
 class User(AbstractUser):
@@ -157,20 +159,28 @@ class Product(models.Model):
             return "No suppliers"
         return ", ".join([supplier.company_name for supplier in suppliers])
     
-    def update_all_potential_sales(self, date_from: datetime.date=None, date_to: datetime.date=None):
+    def update_all_potential_sales(self, min_stock: int=1):
         """
-        Calculate potential sales for all daily metrics
+        Calculate potential sales for all daily metrics - fill gaps with average from good stock days
         """
-        if not date_to:
-            date_to: datetime.date = datetime.now().date()
-        if not date_from:
-            date_from: datetime.date = date_to - timedelta(days=365)
-        metrics: QuerySet = self.daily_metrics.filter(date__range=[date_from, date_to]).order_by('date')
-        for metric in metrics:
-            potential: float = DailyMetrics.calculate_potential_sales_for_date(
-                self, metric.date, lookback_days=30
-            )
-            metric.potential_sales = potential
+        
+        oldest_metric : DailyMetrics = self.daily_metrics.order_by('date').first()
+        newest_metric : DailyMetrics = self.daily_metrics.order_by('-date').first()
+        if not oldest_metric or not newest_metric:
+            return
+        
+        # Get all metrics for the product
+        all_metrics: QuerySet = self.daily_metrics.filter(date__range=[oldest_metric.date, newest_metric.date])
+        
+        # Calculate average
+        average_potential_sales: float = get_average_potential_sales(all_metrics, min_stock)
+        
+        # Update potential sales for all metrics
+        for metric in all_metrics:
+            if metric.stock >= min_stock:
+                metric.potential_sales = metric.sales_quantity or 0.0
+            else:
+                metric.potential_sales = average_potential_sales
             metric.save()
     
     def average_daily_demand(self, days_back: int = 365) -> float:
