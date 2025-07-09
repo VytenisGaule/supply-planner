@@ -229,36 +229,5 @@ class DailyMetrics(models.Model):
         
         super().save(*args, **kwargs)
     
-    @classmethod
-    def calculate_potential_sales_for_date(cls, product: Product, target_date: datetime.date, lookback_days: int=30) -> float:
-        """
-        Calculate potential sales for a specific date using recent adequate-stock periods
-        """
-        
-        start_date: datetime.date = target_date - timedelta(days=lookback_days)
-        try:
-            target_metric: QuerySet = cls.objects.get(product=product, date=target_date)
-        except cls.DoesNotExist:
-            return 0
-        
-        # For good stock, potential == actual
-        if target_metric.stock > 0:
-            if not target_metric.sales_quantity:
-                return 0
-            return target_metric.sales_quantity
-        
-        # For stockout/low stock days, potential == average of recent "good" days
-        recent_good_days: QuerySet = cls.objects.filter(
-            product=product,
-            date__range=[start_date, target_date - timedelta(days=1)],
-            stock__gt=0,  # Had some stock
-            sales_quantity__isnull=False
-        )
-        if recent_good_days.exists():
-            avg_sales: Union[float, None] = recent_good_days.aggregate(avg=Avg('sales_quantity'))['avg']
-            if avg_sales:
-                return avg_sales
-        return 0
-    
     def __str__(self):
         return f"{self.product.kodas} - {self.date} (Stock: {self.stock}, Sales: {self.sales_quantity})"
