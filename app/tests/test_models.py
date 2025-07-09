@@ -1206,3 +1206,258 @@ class FixtureTestCase(TestCase):
         
         total_products = expensive_products.count() + cheap_products.count()
         self.assertEqual(total_products, Product.objects.count())
+
+
+class AverageDailyDemandTestCase(TestCase):
+    """Test cases for Product.average_daily_demand method"""
+    
+    def setUp(self):
+        """Set up test data"""
+        from datetime import date, timedelta
+        
+        self.category = Category.objects.create(
+            category_code="DEMAND_TEST",
+            name="Demand Test Category"
+        )
+        
+        self.product = Product.objects.create(
+            kodas="DEMAND_TEST_001",
+            pavadinimas="Demand Test Product",
+            category=self.category,
+            last_purchase_price=Decimal('50.00'),
+            lead_time=30
+        )
+        
+        # Create test date range
+        self.today = date.today()
+        self.base_date = self.today - timedelta(days=400)  # Go back 400 days for testing
+        
+        # Create test metrics with potential_sales data
+        self.create_test_metrics()
+    
+    def create_test_metrics(self):
+        """Create test metrics with various potential_sales scenarios"""
+        from datetime import timedelta
+        
+        # Days 1-30: Recent data with potential_sales = 5.0
+        for i in range(30):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=5,
+                stock=10,
+                potential_sales=5.0
+            )
+        
+        # Days 31-60: Older data with potential_sales = 3.0
+        for i in range(30, 60):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=3,
+                stock=8,
+                potential_sales=3.0
+            )
+        
+        # Days 61-90: Even older data with potential_sales = 7.0
+        for i in range(60, 90):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=7,
+                stock=15,
+                potential_sales=7.0
+            )
+        
+        # Days 91-120: Old data with NULL potential_sales
+        for i in range(90, 120):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=4,
+                stock=12,
+                potential_sales=None  # No potential_sales calculated
+            )
+        
+        # Days 121-150: Very old data with potential_sales = 2.0
+        for i in range(120, 150):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=2,
+                stock=5,
+                potential_sales=2.0
+            )
+    
+    def test_average_daily_demand_default_period(self):
+        """Test average daily demand calculation for default 365-day period"""
+        result = self.product.average_daily_demand()
+        
+        # Should include days 1-150 (all with potential_sales except 91-120)
+        # Expected: (5.0*30 + 3.0*30 + 7.0*30 + 2.0*30) / 120 = 510/120 = 4.25
+        expected = (5.0*30 + 3.0*30 + 7.0*30 + 2.0*30) / 120
+        self.assertEqual(result, expected)
+    
+    def test_average_daily_demand_30_days(self):
+        """Test average daily demand calculation for last 30 days"""
+        result = self.product.average_daily_demand(days_back=30)
+        
+        # Should only include last 30 days (all with potential_sales = 5.0)
+        self.assertEqual(result, 5.0)
+    
+    def test_average_daily_demand_60_days(self):
+        """Test average daily demand calculation for last 60 days"""
+        result = self.product.average_daily_demand(days_back=60)
+        
+        # Should include days 1-60: (5.0*30 + 3.0*30) / 60 = 240/60 = 4.0
+        expected = (5.0*30 + 3.0*30) / 60
+        self.assertEqual(result, expected)
+    
+    def test_average_daily_demand_with_null_potential_sales(self):
+        """Test average daily demand when some metrics have NULL potential_sales"""
+        result = self.product.average_daily_demand(days_back=120)
+        
+        # Should include days 1-90 only (excludes days 91-120 with NULL potential_sales)
+        # Expected: (5.0*30 + 3.0*30 + 7.0*30) / 90 = 450/90 = 5.0
+        expected = (5.0*30 + 3.0*30 + 7.0*30) / 90
+        self.assertEqual(result, expected)
+    
+    def test_average_daily_demand_no_potential_sales_data(self):
+        """Test average daily demand when no potential_sales data exists"""
+        # Create a product with no potential_sales data
+        test_product = Product.objects.create(
+            kodas="NO_POTENTIAL_SALES",
+            pavadinimas="No Potential Sales Product",
+            category=self.category
+        )
+        
+        # Create metrics without potential_sales
+        from datetime import timedelta
+        for i in range(10):
+            DailyMetrics.objects.create(
+                product=test_product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=5,
+                stock=10,
+                potential_sales=None
+            )
+        
+        result = test_product.average_daily_demand()
+        self.assertIsNone(result)
+    
+    def test_average_daily_demand_no_metrics(self):
+        """Test average daily demand when product has no metrics"""
+        empty_product = Product.objects.create(
+            kodas="EMPTY_PRODUCT",
+            pavadinimas="Empty Product",
+            category=self.category
+        )
+        
+        result = empty_product.average_daily_demand()
+        self.assertIsNone(result)
+    
+    def test_average_daily_demand_future_date_range(self):
+        """Test average daily demand with date range in the future (no data)"""
+        from datetime import timedelta
+        
+        # Look back only 1 day from 2 years ago (no data should exist)
+        result = self.product.average_daily_demand(days_back=1)
+        
+        # Since we're looking at very recent data and our test data starts from 400 days ago,
+        # this should find the recent data we created
+        self.assertIsNotNone(result)
+        self.assertEqual(result, 5.0)  # Should find the last 30 days data
+    
+    def test_average_daily_demand_zero_potential_sales(self):
+        """Test average daily demand with zero potential_sales values"""
+        # Create product with zero potential_sales
+        zero_product = Product.objects.create(
+            kodas="ZERO_DEMAND",
+            pavadinimas="Zero Demand Product",
+            category=self.category
+        )
+        
+        from datetime import timedelta
+        for i in range(10):
+            DailyMetrics.objects.create(
+                product=zero_product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=0,
+                stock=10,
+                potential_sales=0.0
+            )
+        
+        result = zero_product.average_daily_demand()
+        self.assertEqual(result, 0.0)
+    
+    def test_average_daily_demand_mixed_zero_and_positive(self):
+        """Test average daily demand with mix of zero and positive potential_sales"""
+        mixed_product = Product.objects.create(
+            kodas="MIXED_DEMAND",
+            pavadinimas="Mixed Demand Product",
+            category=self.category
+        )
+        
+        from datetime import timedelta
+        # 5 days with 0.0 potential_sales
+        for i in range(5):
+            DailyMetrics.objects.create(
+                product=mixed_product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=0,
+                stock=10,
+                potential_sales=0.0
+            )
+        
+        # 5 days with 10.0 potential_sales
+        for i in range(5, 10):
+            DailyMetrics.objects.create(
+                product=mixed_product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=10,
+                stock=10,
+                potential_sales=10.0
+            )
+        
+        result = mixed_product.average_daily_demand(days_back=10)
+        # Expected: (0.0*5 + 10.0*5) / 10 = 50/10 = 5.0
+        self.assertEqual(result, 5.0)
+    
+    def test_average_daily_demand_decimal_precision(self):
+        """Test average daily demand with decimal precision"""
+        decimal_product = Product.objects.create(
+            kodas="DECIMAL_DEMAND",
+            pavadinimas="Decimal Demand Product",
+            category=self.category
+        )
+        
+        from datetime import timedelta
+        # Create metrics with decimal potential_sales values
+        potential_sales_values = [1.5, 2.3, 3.7, 4.1, 5.9]
+        for i, value in enumerate(potential_sales_values):
+            DailyMetrics.objects.create(
+                product=decimal_product,
+                date=self.today - timedelta(days=i),
+                sales_quantity=int(value),
+                stock=10,
+                potential_sales=value
+            )
+        
+        result = decimal_product.average_daily_demand(days_back=5)
+        expected = sum(potential_sales_values) / len(potential_sales_values)
+        self.assertAlmostEqual(result, expected, places=2)
+    
+    def test_average_daily_demand_return_type(self):
+        """Test that average_daily_demand returns correct types"""
+        # Test with data
+        result_with_data = self.product.average_daily_demand(days_back=30)
+        self.assertIsInstance(result_with_data, float)
+        
+        # Test without data
+        empty_product = Product.objects.create(
+            kodas="TYPE_TEST",
+            pavadinimas="Type Test Product",
+            category=self.category
+        )
+        result_without_data = empty_product.average_daily_demand()
+        self.assertIsNone(result_without_data)

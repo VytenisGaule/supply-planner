@@ -183,7 +183,7 @@ class Product(models.Model):
                 metric.potential_sales = average_potential_sales
             metric.save()
     
-    def average_daily_demand(self, days_back: int = 365) -> float:
+    def average_daily_demand(self, days_back: int = 365) -> Optional[float]:
         """Calculate average daily demand from potential_sales"""
         end_date: datetime.date = datetime.now().date()
         start_date: datetime.date = end_date - timedelta(days=days_back)
@@ -193,7 +193,7 @@ class Product(models.Model):
             potential_sales__isnull=False
         ).aggregate(avg=Avg('potential_sales'))['avg']
         
-        return float(avg_sales) if avg_sales else 0.0
+        return float(avg_sales) if avg_sales is not None else None
 
 class DailyMetrics(models.Model):
     """
