@@ -154,7 +154,7 @@ class Product(models.Model):
     
     def get_supplier_names(self):
         """Get comma-separated list of supplier names"""
-        suppliers: QuerySet = self.suppliers.all()  # pylint: disable=no-member
+        suppliers: QuerySet = self.suppliers.all()
         if not suppliers.exists():
             return "No suppliers"
         return ", ".join([supplier.company_name for supplier in suppliers])
@@ -168,14 +168,8 @@ class Product(models.Model):
         newest_metric : DailyMetrics = self.daily_metrics.order_by('-date').first()
         if not oldest_metric or not newest_metric:
             return
-        
-        # Get all metrics for the product
         all_metrics: QuerySet = self.daily_metrics.filter(date__range=[oldest_metric.date, newest_metric.date])
-        
-        # Calculate average
         average_potential_sales: float = get_average_potential_sales(all_metrics, min_stock)
-        
-        # Update potential sales for all metrics
         for metric in all_metrics:
             if metric.stock >= min_stock:
                 metric.potential_sales = metric.sales_quantity or 0.0
@@ -201,12 +195,8 @@ class DailyMetrics(models.Model):
     """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='daily_metrics')
     date = models.DateField()
-    
-    # Core data
     sales_quantity = models.IntegerField(default=0, null=True, blank=True, help_text="Quantity sold - returned")
     stock = models.PositiveIntegerField(default=0, null=True, blank=True, help_text="Quantity in main warehouse")
-    
-    # Potential sales calculation (independent of product averages)
     potential_sales = models.FloatField(default=0, null=True, blank=True, 
                                         help_text="Potential sales based on recent sales trend when stock was adequate")
     class Meta:
