@@ -129,11 +129,13 @@ class Product(models.Model):
         ('EUR', 'EUR'),
     ]
     
+    # fields to import from ERP
     kodas = models.CharField(max_length=50, null=True, blank=True)
     pavadinimas = models.CharField(max_length=400, null=True, blank=True)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     last_purchase_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True, help_text="Last purchase price")
     currency = models.CharField(max_length=10, default='USD', choices=CURRENCY_CHOICES)
+    # fields to enter manually
     lead_time = models.PositiveIntegerField(default=120, help_text="Lead time in days including transportation and customs clearance")
     
     class Meta:
@@ -193,10 +195,12 @@ class DailyMetrics(models.Model):
     """
     Daily metrics for products with potential sales tracking
     """
+    # fields to import from ERP
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='daily_metrics')
     date = models.DateField()
     sales_quantity = models.IntegerField(default=0, null=True, blank=True, help_text="Quantity sold - returned")
     stock = models.PositiveIntegerField(default=0, null=True, blank=True, help_text="Quantity in main warehouse")
+    # calculated fields
     potential_sales = models.FloatField(default=0, null=True, blank=True, 
                                         help_text="Potential sales based on recent sales trend when stock was adequate")
     class Meta:
