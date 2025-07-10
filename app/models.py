@@ -186,7 +186,7 @@ class Product(models.Model):
     def average_daily_demand(self, days_back: int = 365) -> Optional[float]:
         """Calculate average daily demand from potential_sales"""
         end_date: datetime.date = datetime.now().date()
-        start_date: datetime.date = end_date - timedelta(days=days_back)
+        start_date: datetime.date = end_date - timedelta(days=days_back - 1)
         
         avg_sales = self.daily_metrics.filter(
             date__range=[start_date, end_date],
