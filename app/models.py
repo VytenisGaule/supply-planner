@@ -209,9 +209,6 @@ class DailyMetrics(models.Model):
     # Potential sales calculation (independent of product averages)
     potential_sales = models.FloatField(default=0, null=True, blank=True, 
                                         help_text="Potential sales based on recent sales trend when stock was adequate")
-    lost_sales = models.FloatField(default=0, null=True, blank=True, 
-                                   help_text="Lost sales = potential_sales - actual sales_quantity")
-    
     class Meta:
         """Meta class for Daily_Metrics model"""
         unique_together = ('product', 'date')
@@ -220,14 +217,12 @@ class DailyMetrics(models.Model):
             models.Index(fields=['product', 'date']),
         ]
     
-    def save(self, *args, **kwargs):
-        """Auto-calculate basic metrics"""
-        
-        # Calculate lost sales if potential_sales is provided
+    @property
+    def lost_sales(self) -> Optional[float]:
+        """Calculate lost sales as potential sales minus actual sales quantity"""
         if self.potential_sales is not None and self.sales_quantity is not None:
-            self.lost_sales = max(0, self.potential_sales - self.sales_quantity)
-        
-        super().save(*args, **kwargs)
+            return max(0, self.potential_sales - self.sales_quantity)
+        return None
     
     def __str__(self):
         return f"{self.product.kodas} - {self.date} (Stock: {self.stock}, Sales: {self.sales_quantity})"
