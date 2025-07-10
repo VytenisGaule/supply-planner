@@ -135,7 +135,7 @@ class Product(models.Model):
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     last_purchase_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True, help_text="Last purchase price")
     currency = models.CharField(max_length=10, default='USD', choices=CURRENCY_CHOICES)
-    # fields to enter manually
+    # fields entered or calculated
     lead_time = models.PositiveIntegerField(default=120, help_text="Lead time in days including transportation and customs clearance")
     
     class Meta:
