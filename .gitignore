@@ -1,6 +1,11 @@
 /virtualEnvironment/
 env
-/static/
+# Static files (collected by collectstatic - production)
+/staticfiles/
+# Keep source static files but ignore generated ones
+/static/css/output.css
+/static/css/dist/
+
 # Django #
 *.log
 *.pot
@@ -12,3 +17,9 @@ media
 .DS_Store
 locale
 *.backup
+# Node.js dependencies
+node_modules/
+# Tailwind build output
+/stock_predictor/static/css/dist/
+# CSS build artifacts
+*.css.map

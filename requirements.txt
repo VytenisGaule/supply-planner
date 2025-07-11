@@ -5,6 +5,10 @@ python-decouple==3.8
 django-extensions==3.2.3
 whitenoise==6.6.0
 
+# Frontend & CSS
+django-compressor==4.4
+django-tailwind==3.8.0
+
 # Data science (add when needed)
 # pandas>=2.0.0
 # numpy>=1.24.0

@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'django_extensions',
+    'compressor',
+    'tailwind',
+    'stock_predictor',
     
     # Local apps
     'app',
@@ -193,3 +196,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+
+# Django Compressor settings
+COMPRESS_ENABLED = True
+COMPRESS_OFFLINE = False
+COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter']
+COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
+
+# Tailwind CSS settings
+TAILWIND_APP_NAME = 'stock_predictor'
+INTERNAL_IPS = ['127.0.0.1']
+
+# Static files finders (add compressor finder)
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
+]
