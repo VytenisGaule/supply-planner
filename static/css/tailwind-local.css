@@ -926,6 +926,30 @@ body {
     background-color: #edf2f7;
 }
 
+.hover\:bg-blue-100:hover {
+    background-color: #ebf8ff;
+}
+
+.hover\:bg-blue-200:hover {
+    background-color: #bfdbfe;
+}
+
+.hover\:bg-blue-300:hover {
+    background-color: #93c5fd;
+}
+
+.hover\:bg-blue-400:hover {
+    background-color: #60a5fa;
+}
+
+.hover\:bg-blue-500:hover {
+    background-color: #3b82f6;
+}
+
+.hover\:bg-gray-300:hover {
+    background-color: #d1d5db;
+}
+
 .hover\:text-blue-600:hover {
     color: #2563eb;
 }
@@ -1353,4 +1377,91 @@ body {
 
 .mr-2 {
     margin-right: 0.5rem;
+}
+
+/* Table utilities */
+.table-auto {
+    table-layout: auto;
+}
+
+.table-fixed {
+    table-layout: fixed;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.divide-y> :not([hidden])~ :not([hidden]) {
+    border-top-width: 1px;
+    border-top-color: #e5e7eb;
+}
+
+.divide-gray-200> :not([hidden])~ :not([hidden]) {
+    border-top-color: #e5e7eb;
+}
+
+.whitespace-nowrap {
+    white-space: nowrap;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05em;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+/* Additional padding utilities */
+.px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+/* Additional background colors */
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+.hover\:bg-gray-50:hover {
+    background-color: #f9fafb;
+}
+
+/* Cursor utilities */
+.cursor-auto {
+    cursor: auto;
+}
+
+.cursor-default {
+    cursor: default;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-wait {
+    cursor: wait;
+}
+
+.cursor-text {
+    cursor: text;
+}
+
+.cursor-move {
+    cursor: move;
+}
+
+.cursor-help {
+    cursor: help;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
 }
