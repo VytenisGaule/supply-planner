@@ -19,5 +19,7 @@ locale
 *.backup
 # Node.js dependencies
 node_modules/
+# Tailwind build output
+/stock_predictor/static/css/dist/
 # CSS build artifacts
 *.css.map

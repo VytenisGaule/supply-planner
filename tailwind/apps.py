@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class TailwindAppConfig(AppConfig):
-    name = 'tailwind_app'
+class Stock_predictorConfig(AppConfig):
+    name = 'stock_predictor'

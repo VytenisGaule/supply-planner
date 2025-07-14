@@ -10,22 +10,25 @@
     {% load static %}
     {% load compress %}
 
-    {% compress css inline %}
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{% static 'css/tippy.css' %}" />
+
+    {% compress css inline %}
     <style>
         [x-cloak] {
             display: none !important;
         }
     </style>
-    <link rel="stylesheet" href="{% static 'css/slick.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/slick-theme.css' %}" />
     {% endcompress %}
 </head>
 
 <body>
-    {% block content %}
-    {% endblock %}
+    {% include 'nav/top_navbar.html' %}
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
 </body>
 
 </html>
