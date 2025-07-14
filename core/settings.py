@@ -47,8 +47,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'compressor',
-    'tailwind',
-    'stock_predictor',
     
     # Local apps
     'app',
@@ -202,10 +200,6 @@ COMPRESS_ENABLED = True
 COMPRESS_OFFLINE = False
 COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter']
 COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
-
-# Tailwind CSS settings
-TAILWIND_APP_NAME = 'stock_predictor'
-INTERNAL_IPS = ['127.0.0.1']
 
 # Static files finders (add compressor finder)
 STATICFILES_FINDERS = [

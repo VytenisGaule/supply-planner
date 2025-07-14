@@ -9,10 +9,9 @@
 
     {% load static %}
     {% load compress %}
-    {% load tailwind_tags %}
 
     {% compress css inline %}
-    {% tailwind_css %}
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{% static 'css/tippy.css' %}" />
     <style>
         [x-cloak] {

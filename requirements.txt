@@ -7,7 +7,6 @@ whitenoise==6.6.0
 
 # Frontend & CSS
 django-compressor==4.4
-django-tailwind==3.8.0
 
 # Data science (add when needed)
 # pandas>=2.0.0
