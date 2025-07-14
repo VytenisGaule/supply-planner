@@ -10,10 +10,9 @@
     {% load static %}
     {% load compress %}
 
-    <!-- Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
     {% compress css inline %}
+    <link rel="stylesheet" href="{% static 'css/tailwind-local.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
     <style>
         [x-cloak] {
             display: none !important;
