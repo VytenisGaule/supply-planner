@@ -1465,3 +1465,64 @@ body {
 .cursor-not-allowed {
     cursor: not-allowed;
 }
+
+/* Table border utilities */
+.border-collapse {
+    border-collapse: collapse;
+}
+
+.border-separate {
+    border-collapse: separate;
+}
+
+/* Border right utilities */
+.border-r {
+    border-right-width: 1px;
+}
+
+.border-r-0 {
+    border-right-width: 0;
+}
+
+.border-r-2 {
+    border-right-width: 2px;
+}
+
+/* Border bottom utilities */
+.border-b {
+    border-bottom-width: 1px;
+}
+
+.border-b-0 {
+    border-bottom-width: 0;
+}
+
+.border-b-2 {
+    border-bottom-width: 2px;
+}
+
+/* Border left utilities */
+.border-l {
+    border-left-width: 1px;
+}
+
+.border-l-0 {
+    border-left-width: 0;
+}
+
+.border-l-2 {
+    border-left-width: 2px;
+}
+
+/* Border top utilities */
+.border-t {
+    border-top-width: 1px;
+}
+
+.border-t-0 {
+    border-top-width: 0;
+}
+
+.border-t-2 {
+    border-top-width: 2px;
+}

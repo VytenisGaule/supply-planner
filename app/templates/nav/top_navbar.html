@@ -5,10 +5,6 @@
             <div class="hidden md:flex md:items-center md:space-x-8">
                 <a href="#"
                     class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                    Dashboard
-                </a>
-                <a href="#"
-                    class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                     Products
                 </a>
                 <a href="#"
@@ -17,11 +13,11 @@
                 </a>
                 <a href="#"
                     class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                    Analytics
+                    Categories
                 </a>
                 <a href="#"
                     class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                    Reports
+                    Orders
                 </a>
             </div>
 
@@ -31,7 +27,7 @@
                 <div class="hidden md:block relative" x-data="{ userMenuOpen: false }">
                     <button @click="userMenuOpen = !userMenuOpen"
                         class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer">
-                        <span class="text-gray-600 font-medium p-2">Username</span>
+                        <span class="text-gray-700 hover:text-blue-600 font-medium p-2">Username</span>
                     </button>
 
                     <!-- User dropdown menu -->
@@ -44,14 +40,17 @@
                         x-transition:leave-end="transform opacity-0 scale-95"
                         class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                         <div class="py-1">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">
                                 Your Profile
                             </a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">
                                 Settings
                             </a>
                             <hr class="my-1 border-gray-200">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">
                                 Sign out
                             </a>
                         </div>
@@ -85,10 +84,6 @@
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100"
         x-transition:leave-end="opacity-0 transform scale-95" class="md:hidden">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-            <a href="/"
-                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">
-                Dashboard
-            </a>
             <a href="#"
                 class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">
                 Products
@@ -99,11 +94,11 @@
             </a>
             <a href="#"
                 class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">
-                Analytics
+                Categories
             </a>
             <a href="#"
                 class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">
-                Reports
+                Orders
             </a>
         </div>
 
