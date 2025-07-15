@@ -1032,6 +1032,26 @@ body {
         padding-left: 0.75rem;
         padding-right: 0.75rem;
     }
+
+    .sm\:flex {
+        display: flex;
+    }
+
+    .sm\:flex-1 {
+        flex: 1 1 0%;
+    }
+
+    .sm\:items-center {
+        align-items: center;
+    }
+
+    .sm\:justify-between {
+        justify-content: space-between;
+    }
+
+    .sm\:hidden {
+        display: none;
+    }
 }
 
 @media (min-width: 768px) {
@@ -1269,6 +1289,10 @@ body {
 
 .z-50 {
     z-index: 50;
+}
+
+.z-0 {
+    z-index: 0;
 }
 
 .sr-only {
@@ -1525,4 +1549,61 @@ body {
 
 .border-t-2 {
     border-top-width: 2px;
+}
+
+/* Pagination utilities */
+.space-x-px> :not([hidden])~ :not([hidden]) {
+    margin-left: 1px;
+}
+
+.-space-x-px> :not([hidden])~ :not([hidden]) {
+    margin-left: -1px;
+}
+
+/* Rounded corners */
+.rounded-l-md {
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+}
+
+.rounded-r-md {
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+/* Background colors */
+.bg-blue-50 {
+    background-color: #eff6ff;
+}
+
+.text-blue-600 {
+    color: #2563eb;
+}
+
+/* Justify content */
+.justify-between {
+    justify-content: space-between;
+}
+
+/* Additional responsive utilities */
+@media (min-width: 640px) {
+    .sm\:flex {
+        display: flex;
+    }
+
+    .sm\:flex-1 {
+        flex: 1 1 0%;
+    }
+
+    .sm\:items-center {
+        align-items: center;
+    }
+
+    .sm\:justify-between {
+        justify-content: space-between;
+    }
+
+    .sm\:hidden {
+        display: none;
+    }
 }
