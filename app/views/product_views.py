@@ -4,9 +4,10 @@ from django.http import HttpResponse
 from django.db.models import QuerySet
 from app.models import Product
 
+
 @csrf_protect
-def homepage(request):
+def product_list(request):
     context: dict = {}
     products: QuerySet = Product.objects.all()
     context['products'] = products
-    return render(request, 'pages/index.html', context=context)
+    return render(request, 'lists/product_list.html', context=context)

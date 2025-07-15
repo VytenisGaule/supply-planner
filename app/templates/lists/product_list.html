@@ -1,4 +1,4 @@
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto p-4">
 
     <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
         <table class="w-full border-collapse">
@@ -22,20 +22,36 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
+                {% for product in products %}
                 <tr class="hover:bg-gray-200 cursor-pointer border-b border-gray-200">
-                    <td class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-200">
-                        PRD001
+                    <td class="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-200">
+                        {{ product.kodas }}
                     </td>
-                    <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">
-                        Product Name 1
+                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">
+                        {{ product.pavadinimas }}
                     </td>
-                    <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">
-                        Electronics
+                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">
+                        {% if product.category %}
+                        {{ product.category }}
+                        {% else %}
+                        -
+                        {% endif %}
                     </td>
-                    <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-600">
-                        Supplier A, Supplier B, Supplier C
+                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600">
+                        {% for supplier in product.suppliers.all %}
+                        {{ supplier.company_name }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                        -
+                        {% endfor %}
                     </td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                        No products found
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
