@@ -57,67 +57,45 @@
     </div>
 
     <!-- Pagination -->
-    <div class="mt-6 flex items-center justify-between">
-        <div class="flex-1 flex justify-between sm:hidden">
-            <!-- Mobile pagination -->
+    <div class="mt-6 flex justify-center">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+            <!-- First button -->
+            {% if products.has_previous and products.number > 2 %}
+            <a href="?page=1"
+                class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                1
+            </a>
+            {% endif %}
+
+            <!-- Previous button -->
             {% if products.has_previous %}
             <a href="?page={{ products.previous_page_number }}"
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                Previous
+                class="relative inline-flex items-center px-3 py-2 {% if products.number == 2 %}rounded-l-md{% endif %} border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                {{ products.previous_page_number }}
             </a>
             {% endif %}
 
+            <!-- Current page info -->
+            <span
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                {{ products.number }}
+            </span>
+
+            <!-- Next button -->
             {% if products.has_next %}
             <a href="?page={{ products.next_page_number }}"
-                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                Next
+                class="relative inline-flex items-center px-3 py-2 {% if products.next_page_number == products.paginator.num_pages %}rounded-r-md{% endif %} border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                {{ products.next_page_number }}
             </a>
             {% endif %}
-        </div>
 
-        <!-- Desktop pagination -->
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm text-gray-700">
-                    Showing <span class="font-medium">{{ products.start_index }}</span> to
-                    <span class="font-medium">{{ products.end_index }}</span> of
-                    <span class="font-medium">{{ products.paginator.count }}</span> results
-                </p>
-            </div>
-            <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <!-- Previous button -->
-                    {% if products.has_previous %}
-                    <a href="?page={{ products.previous_page_number }}"
-                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        Previous
-                    </a>
-                    {% endif %}
-
-                    <!-- Page numbers -->
-                    {% for num in products.paginator.page_range %}
-                    {% if products.number == num %}
-                    <span
-                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
-                        {{ num }}
-                    </span>
-                    {% else %}
-                    <a href="?page={{ num }}"
-                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        {{ num }}
-                    </a>
-                    {% endif %}
-                    {% endfor %}
-
-                    <!-- Next button -->
-                    {% if products.has_next %}
-                    <a href="?page={{ products.next_page_number }}"
-                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        Next
-                    </a>
-                    {% endif %}
-                </nav>
-            </div>
-        </div>
+            <!-- Last button -->
+            {% if products.has_next and products.next_page_number < products.paginator.num_pages %} <a
+                href="?page={{ products.paginator.num_pages }}"
+                class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                {{ products.paginator.num_pages }}
+                </a>
+                {% endif %}
+        </nav>
     </div>
 </div>

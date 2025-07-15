@@ -1607,3 +1607,14 @@ body {
         display: none;
     }
 }
+
+/* Additional justify utilities */
+.justify-center {
+    justify-content: center;
+}
+
+/* Additional padding utilities */
+.px-3 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
