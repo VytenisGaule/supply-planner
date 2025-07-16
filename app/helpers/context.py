@@ -15,8 +15,8 @@ def populate_product_list_context(request, context):
     form = ItemsPerPageForm(initial={'items_per_page': items_per_page})
     
     # Pagination
-    paginator = Paginator(products, items_per_page)
-    page_number = request.GET.get('page')
+    paginator: Paginator = Paginator(products, items_per_page)
+    page_number: str = request.GET.get('page') if request.GET.get('page') else request.POST.get('page_number', 1)
     page_obj = paginator.get_page(page_number)
     
     # Update the context dictionary
