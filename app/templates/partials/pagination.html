@@ -1,0 +1,50 @@
+<div class="mt-6 flex items-center">
+    <!-- Items per page dropdown -->
+    <form method="post" class="flex items-center space-x-2" x-data="{ items_per_page: {{ items_per_page }} }"
+        hx-post="{% url 'get_items_per_page' %}" hx-trigger="change delay:50ms" hx-target="#product-list"
+        hx-swap="outerHTML">
+        {% csrf_token %}
+        {{ items_per_page_form }}
+    </form>
+
+    <!-- Pagination controls -->
+    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px mx-auto">
+        <!-- First button -->
+        {% if page_obj.has_previous and page_obj.number > 2 %}
+        <a href="?page=1"
+            class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            1
+        </a>
+        {% endif %}
+
+        <!-- Previous button -->
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}"
+            class="relative inline-flex items-center px-3 py-2 {% if page_obj.number == 2 %}rounded-l-md{% endif %} border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            {{ page_obj.previous_page_number }}
+        </a>
+        {% endif %}
+
+        <!-- Current page info -->
+        <span
+            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+            {{ page_obj.number }}
+        </span>
+
+        <!-- Next button -->
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}"
+            class="relative inline-flex items-center px-3 py-2 {% if page_obj.next_page_number == page_obj.paginator.num_pages %}rounded-r-md{% endif %} border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            {{ page_obj.next_page_number }}
+        </a>
+        {% endif %}
+
+        <!-- Last button -->
+        {% if page_obj.has_next and page_obj.next_page_number < page_obj.paginator.num_pages %} <a
+            href="?page={{ page_obj.paginator.num_pages }}"
+            class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            {{ page_obj.paginator.num_pages }}
+            </a>
+            {% endif %}
+    </nav>
+</div>
