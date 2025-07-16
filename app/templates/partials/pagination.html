@@ -1,12 +1,11 @@
 <div class="mt-6 flex items-center">
     <!-- Items per page dropdown -->
-    <form method="post" class="flex items-center space-x-2" x-data="{ items_per_page: {{ items_per_page }} }"
+    <div class="flex items-center space-x-2" x-data="{ items_per_page: {{ items_per_page }} }"
         hx-post="{% url 'get_items_per_page' %}" hx-trigger="change delay:50ms" hx-target="#product-list"
-        hx-swap="outerHTML" hx-vals='{"page_number": {{ page_obj.number }}}'>
-        {% csrf_token %}
-        <label for="items-per-page" class="text-sm font-medium text-gray-700">Items per page:</label>
+        hx-swap="outerHTML" hx-vals='{"page_number": {{ page_obj.number }}}'
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-include="[name='items_per_page']">
         {{ items_per_page_form }}
-    </form>
+    </div>
 
     <!-- Pagination controls -->
     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px mx-auto">
