@@ -20,6 +20,8 @@
                         Suppliers
                     </th>
                 </tr>
+                <!-- Filter row -->
+                {% include 'filters/product_filter.html' %}
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for product in products %}
