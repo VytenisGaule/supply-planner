@@ -20,3 +20,12 @@ def get_items_per_page(request):
     request.session['items_per_page'] = int(items_per_page)
     populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
+
+@require_POST
+def get_product_filter(request):
+    """
+    get product filter
+    """
+    context: dict = {}
+    rqst = request.POST
+    return render(request, 'lists/product_list.html', context=context)

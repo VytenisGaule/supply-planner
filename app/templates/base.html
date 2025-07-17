@@ -27,7 +27,7 @@
     <script src="{% static 'js/htmx.min.js' %}"></script>
 </head>
 
-<body>
+<body id="main-body">
     {% include 'nav/top_navbar.html' %}
 
     <main>
@@ -35,5 +35,11 @@
         {% endblock %}
     </main>
 </body>
+
+<script>
+    document.body.addEventListener('htmx:configRequest', (event) => {
+        event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+    })
+</script>
 
 </html>

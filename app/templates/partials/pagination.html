@@ -2,8 +2,7 @@
     <!-- Items per page dropdown -->
     <div class="flex items-center space-x-2" x-data="{ items_per_page: {{ items_per_page }} }"
         hx-post="{% url 'get_items_per_page' %}" hx-trigger="change delay:50ms" hx-target="#product-list"
-        hx-swap="outerHTML" hx-vals='{"page_number": {{ page_obj.number }}}'
-        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-include="[name='items_per_page']">
+        hx-swap="outerHTML" hx-vals='{"page_number": {{ page_obj.number }}}' hx-include="[name='items_per_page']">
         {{ items_per_page_form }}
     </div>
 
