@@ -18,3 +18,33 @@ class ItemsPerPageForm(forms.Form):
             'x-model': 'items_per_page'
         })
     )
+
+
+class ProductCodeFilterForm(forms.Form):
+    """Form for filtering products by code"""
+    
+    code = forms.CharField(
+        required=False,
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            'name': 'code',
+            'x-model': 'filters.code',
+            'placeholder': 'Filter by code...',
+            'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+        })
+    )
+
+
+class ProductNameFilterForm(forms.Form):
+    """Form for filtering products by name"""
+    
+    name = forms.CharField(
+        required=False,
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'name': 'name',
+            'x-model': 'filters.name',
+            'placeholder': 'Filter by name...',
+            'class': 'w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+        })
+    )

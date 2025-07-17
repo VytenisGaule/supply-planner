@@ -1,7 +1,8 @@
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, QueryDict
+from app.forms import ProductCodeFilterForm, ProductNameFilterForm
 from app.helpers.context import populate_product_list_context
 
 @csrf_protect
@@ -27,5 +28,7 @@ def get_product_filter(request):
     get product filter
     """
     context: dict = {}
-    rqst = request.POST
+    filter_data: QueryDict = request.POST
+    request.session['filter_data'] = filter_data.dict()
+    populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
