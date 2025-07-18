@@ -1,4 +1,5 @@
 from django import forms
+from app.models import Category, Supplier
 
 
 class ItemsPerPageForm(forms.Form):
@@ -45,6 +46,40 @@ class ProductNameFilterForm(forms.Form):
             'name': 'name',
             'x-model': 'filters.name',
             'placeholder': 'Filter by name...',
-            'class': 'w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+            'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+        })
+    )
+
+
+class ProductCategoryFilterForm(forms.Form):
+    """Form for filtering products by categories with custom multi-select"""
+    
+    categories = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'name': 'categories',
+            'x-model': 'filters.categories',
+            'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
+            'data-select2': 'true',
+            'data-placeholder': 'Select categories...',
+            'multiple': 'multiple'
+        })
+    )
+
+
+class ProductSupplierFilterForm(forms.Form):
+    """Form for filtering products by suppliers with custom multi-select"""
+    
+    suppliers = forms.ModelMultipleChoiceField(
+        queryset=Supplier.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'name': 'suppliers',
+            'x-model': 'filters.suppliers',
+            'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
+            'data-select2': 'true',
+            'data-placeholder': 'Select suppliers...',
+            'multiple': 'multiple'
         })
     )

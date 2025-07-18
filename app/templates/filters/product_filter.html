@@ -1,6 +1,6 @@
 <tr class="border-b border-gray-200 bg-gray-100" hx-post="{% url 'get_product_filter' %}"
     hx-trigger="change delay:0.25s from:input" hx-target="#product-list" hx-swap="outerHTML"
-    hx-include="[name='code'], [name='name']">
+    hx-include="[name='code'], [name='name'], [name='categories'], [name='suppliers']">
     <th class="p-1 border-r border-gray-200">
         {{ code_filter_form.code }}
     </th>
@@ -8,11 +8,9 @@
         {{ name_filter_form.name }}
     </th>
     <th class="p-1 border-r border-gray-200">
-        <input type="text" placeholder="Categories (coming soon...)" disabled
-            class="w-full px-2 py-1 text-xs border border-gray-300 rounded bg-gray-100 text-gray-400">
+        {{ category_filter_form.categories }}
     </th>
     <th class="p-1 border-r border-gray-200">
-        <input type="text" placeholder="Suppliers (coming soon...)" disabled
-            class="w-full px-2 py-1 text-xs border border-gray-300 rounded bg-gray-100 text-gray-400">
+        {{ supplier_filter_form.suppliers }}
     </th>
 </tr>

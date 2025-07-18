@@ -20,11 +20,17 @@
     </style>
     {% endcompress %}
 
+    <!-- jQuery (still needed for HTMX and other functionality) -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+
     <!-- Alpine.js (local) -->
     <script defer src="{% static 'js/alpine.min.js' %}"></script>
 
     <!-- HTMX (local) -->
     <script src="{% static 'js/htmx.min.js' %}"></script>
+
+    <!-- Custom Multi-Select -->
+    <script src="{% static 'js/multiselect.js' %}"></script>
 </head>
 
 <body id="main-body">
@@ -37,9 +43,10 @@
 </body>
 
 <script>
+    // Global CSRF token configuration for HTMX
     document.body.addEventListener('htmx:configRequest', (event) => {
         event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-    })
+    });
 </script>
 
 </html>

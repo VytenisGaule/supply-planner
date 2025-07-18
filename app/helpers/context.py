@@ -1,7 +1,7 @@
 from django.core.paginator import Paginator
 from django.db.models import QuerySet
 from app.models import Product
-from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm
+from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm
 
 
 def populate_product_list_context(request, context):
@@ -16,6 +16,8 @@ def populate_product_list_context(request, context):
     items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
     code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
     name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
+    category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data)
+    supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data)
     code_filter_form.is_valid()
     name_filter_form.is_valid()
 
@@ -31,5 +33,7 @@ def populate_product_list_context(request, context):
     context['items_per_page_form'] = items_per_page_form
     context['code_filter_form'] = code_filter_form
     context['name_filter_form'] = name_filter_form
+    context['category_filter_form'] = category_filter_form
+    context['supplier_filter_form'] = supplier_filter_form
 
 
