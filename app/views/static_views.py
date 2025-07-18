@@ -1,6 +1,5 @@
 from django.views.decorators.csrf import csrf_protect
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.shortcuts import render
 from app.helpers.context import populate_product_list_context
 
 @csrf_protect

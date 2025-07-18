@@ -1,5 +1,6 @@
 from django.core.paginator import Paginator
 from django.db.models import QuerySet
+from django.http import QueryDict
 from app.models import Product
 from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm
 
@@ -10,7 +11,7 @@ def populate_product_list_context(request, context):
     """
     products: QuerySet = Product.objects.select_related('category').prefetch_related('suppliers').all()
     items_per_page: int = request.session.get('items_per_page', 20)
-    filter_data: dict = request.session.get('filter_data', {})
+    filter_data: QueryDict = request.session.get('filter_data', QueryDict())
     
     # Create form with current value
     items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
@@ -20,6 +21,8 @@ def populate_product_list_context(request, context):
     supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data)
     code_filter_form.is_valid()
     name_filter_form.is_valid()
+    category_filter_form.is_valid()
+    supplier_filter_form.is_valid()
 
     # Pagination
     paginator: Paginator = Paginator(products, items_per_page)
@@ -35,5 +38,9 @@ def populate_product_list_context(request, context):
     context['name_filter_form'] = name_filter_form
     context['category_filter_form'] = category_filter_form
     context['supplier_filter_form'] = supplier_filter_form
+    
+    # Add selected values for JavaScript
+    context['selected_categories'] = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
+    context['selected_suppliers'] = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
 
 

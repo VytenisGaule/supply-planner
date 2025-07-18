@@ -8,9 +8,27 @@
         {{ name_filter_form.name }}
     </th>
     <th class="p-1 border-r border-gray-200">
-        {{ category_filter_form.categories }}
+        {% with category_filter_form.categories as field %}
+        <select name="{{ field.name }}"
+            class="w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            data-select2="true" data-placeholder="Select categories..."
+            data-selected="{{ selected_categories|join:',' }}" multiple="multiple">
+            {% for choice in field.field.choices %}
+            <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+            {% endfor %}
+        </select>
+        {% endwith %}
     </th>
     <th class="p-1 border-r border-gray-200">
-        {{ supplier_filter_form.suppliers }}
+        {% with supplier_filter_form.suppliers as field %}
+        <select name="{{ field.name }}"
+            class="w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            data-select2="true" data-placeholder="Select suppliers..." data-selected="{{ selected_suppliers|join:',' }}"
+            multiple="multiple">
+            {% for choice in field.field.choices %}
+            <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+            {% endfor %}
+        </select>
+        {% endwith %}
     </th>
 </tr>

@@ -48,6 +48,44 @@ function initializeCustomMultiSelect() {
             }
         });
 
+        // Handle pre-selected values from form data
+        const fieldName = $select.attr('name');
+        let selectedValues = [];
+
+        // Try to get selected values from the select element's data attribute
+        const dataSelected = $select.data('selected');
+
+        if (dataSelected) {
+            if (typeof dataSelected === 'string' && dataSelected !== '') {
+                selectedValues = dataSelected.split(',').filter(val => val !== '');
+            } else if (Array.isArray(dataSelected)) {
+                selectedValues = dataSelected;
+            } else if (dataSelected !== '') {
+                selectedValues = [dataSelected.toString()];
+            }
+        }
+
+        // Apply the selected values
+        selectedValues.forEach(function (value) {
+            const $option = $select.find(`option[value="${value}"]`);
+            if ($option.length > 0) {
+                const text = $option.text();
+
+                // Mark option as selected
+                $option.prop('selected', true);
+                $dropdown.find(`[data-value="${value}"]`).addClass('selected');
+
+                // Add tag
+                const $tag = $(`
+                    <span class="multiselect-tag">
+                        ${text}
+                        <button type="button" data-value="${value}">×</button>
+                    </span>
+                `);
+                $input.before($tag);
+            }
+        });
+
         // Show/hide dropdown
         $input.on('focus', function () {
             $dropdown.addClass('show');
@@ -82,6 +120,9 @@ function initializeCustomMultiSelect() {
                 // Update original select
                 $select.find(`option[value="${value}"]`).prop('selected', true);
                 $select.trigger('change');
+
+                // Manually trigger HTMX request
+                triggerHTMXFilter();
             }
 
             $input.val('').focus();
@@ -101,6 +142,9 @@ function initializeCustomMultiSelect() {
             // Update original select
             $select.find(`option[value="${value}"]`).prop('selected', false);
             $select.trigger('change');
+
+            // Manually trigger HTMX request
+            triggerHTMXFilter();
         });
 
         // Search functionality
@@ -124,3 +168,47 @@ $(document).ready(function () {
         setTimeout(initializeCustomMultiSelect, 50);
     });
 });
+
+// Function to manually trigger HTMX filter request
+function triggerHTMXFilter() {
+    // Find the filter row and get its HTMX attributes
+    const $filterRow = $('tr[hx-post]');
+    if ($filterRow.length > 0) {
+        // Use setTimeout to debounce the request
+        clearTimeout(window.htmxFilterTimeout);
+        window.htmxFilterTimeout = setTimeout(function () {
+            // Collect form data from all filter inputs
+            const formData = {};
+
+            // Add text filter values
+            $('[name="code"]').each(function () {
+                if (this.value) formData.code = this.value;
+            });
+            $('[name="name"]').each(function () {
+                if (this.value) formData.name = this.value;
+            });
+
+            // Add multi-select values
+            formData.categories = [];
+            $('[name="categories"]').each(function () {
+                $(this).find('option:selected').each(function () {
+                    if (this.value) formData.categories.push(this.value);
+                });
+            });
+
+            formData.suppliers = [];
+            $('[name="suppliers"]').each(function () {
+                $(this).find('option:selected').each(function () {
+                    if (this.value) formData.suppliers.push(this.value);
+                });
+            });
+
+            // Make the HTMX request
+            htmx.ajax('POST', $filterRow.attr('hx-post'), {
+                values: formData,
+                target: '#product-list',
+                swap: 'outerHTML'
+            });
+        }, 250);
+    }
+}
