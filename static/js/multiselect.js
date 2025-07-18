@@ -39,7 +39,8 @@ function initializeCustomMultiSelect() {
             const value = $option.val();
             const text = $option.text();
 
-            if (value) {
+            // Include all options, even those with empty values
+            if (text) {
                 $dropdown.append(`
                     <div class="multiselect-option" data-value="${value}">
                         ${text}
@@ -67,7 +68,11 @@ function initializeCustomMultiSelect() {
 
         // Apply the selected values
         selectedValues.forEach(function (value) {
-            const $option = $select.find(`option[value="${value}"]`);
+            // Handle both empty and non-empty values
+            const $option = value === '' ?
+                $select.find('option[value=""]') :
+                $select.find(`option[value="${value}"]`);
+
             if ($option.length > 0) {
                 const text = $option.text();
 
@@ -88,6 +93,16 @@ function initializeCustomMultiSelect() {
 
         // Show/hide dropdown
         $input.on('focus', function () {
+            // Position the dropdown relative to the input
+            const inputOffset = $inputContainer.offset();
+            const inputHeight = $inputContainer.outerHeight();
+
+            $dropdown.css({
+                'top': inputOffset.top + inputHeight,
+                'left': inputOffset.left,
+                'width': $inputContainer.outerWidth()
+            });
+
             $dropdown.addClass('show');
         });
 
@@ -117,8 +132,11 @@ function initializeCustomMultiSelect() {
 
                 $input.before($tag);
 
-                // Update original select
-                $select.find(`option[value="${value}"]`).prop('selected', true);
+                // Update original select - handle empty values properly
+                const $selectOption = value === '' ?
+                    $select.find('option[value=""]') :
+                    $select.find(`option[value="${value}"]`);
+                $selectOption.prop('selected', true);
                 $select.trigger('change');
 
                 // Manually trigger HTMX request
@@ -139,8 +157,11 @@ function initializeCustomMultiSelect() {
             // Update dropdown
             $dropdown.find(`[data-value="${value}"]`).removeClass('selected');
 
-            // Update original select
-            $select.find(`option[value="${value}"]`).prop('selected', false);
+            // Update original select - handle empty values properly
+            const $selectOption = value === '' ?
+                $select.find('option[value=""]') :
+                $select.find(`option[value="${value}"]`);
+            $selectOption.prop('selected', false);
             $select.trigger('change');
 
             // Manually trigger HTMX request
@@ -155,6 +176,20 @@ function initializeCustomMultiSelect() {
                 const text = $(this).text().toLowerCase();
                 $(this).toggle(text.includes(search));
             });
+        });
+
+        // Reposition dropdown on window resize or scroll
+        $(window).on('resize scroll', function () {
+            if ($dropdown.hasClass('show')) {
+                const inputOffset = $inputContainer.offset();
+                const inputHeight = $inputContainer.outerHeight();
+
+                $dropdown.css({
+                    'top': inputOffset.top + inputHeight,
+                    'left': inputOffset.left,
+                    'width': $inputContainer.outerWidth()
+                });
+            }
         });
     });
 }

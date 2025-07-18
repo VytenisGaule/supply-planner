@@ -54,8 +54,7 @@ class ProductNameFilterForm(forms.Form):
 class ProductCategoryFilterForm(forms.Form):
     """Form for filtering products by categories with custom multi-select"""
     
-    categories = forms.ModelMultipleChoiceField(
-        queryset=Category.objects.all(),
+    categories = forms.MultipleChoiceField(
         required=False,
         widget=forms.SelectMultiple(attrs={
             'name': 'categories',
@@ -66,13 +65,19 @@ class ProductCategoryFilterForm(forms.Form):
             'multiple': 'multiple'
         })
     )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add "No category" option first, then all categories
+        choices = [('empty', 'Be kategorijos')]
+        choices.extend([(cat.id, cat.name) for cat in Category.objects.all()])
+        self.fields['categories'].choices = choices
 
 
 class ProductSupplierFilterForm(forms.Form):
     """Form for filtering products by suppliers with custom multi-select"""
     
-    suppliers = forms.ModelMultipleChoiceField(
-        queryset=Supplier.objects.all(),
+    suppliers = forms.MultipleChoiceField(
         required=False,
         widget=forms.SelectMultiple(attrs={
             'name': 'suppliers',
@@ -83,3 +88,10 @@ class ProductSupplierFilterForm(forms.Form):
             'multiple': 'multiple'
         })
     )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add "No suppliers" option first, then all suppliers
+        choices = [('empty', 'Be tiekėjų')]
+        choices.extend([(sup.id, sup.company_name) for sup in Supplier.objects.all()])
+        self.fields['suppliers'].choices = choices
