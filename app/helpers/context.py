@@ -12,8 +12,8 @@ def populate_product_list_context(request, context):
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
     code_filter: str = filter_data.get('code', '')
     name_filter: str = filter_data.get('name', '')
-    category_filter: list = filter_data.get('categories', [])
-    supplier_filter: list = filter_data.get('suppliers', [])
+    category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
+    supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
     products: QuerySet = Product.objects.select_related('category').prefetch_related('suppliers').all()
     if code_filter:
         products = products.filter(kodas__icontains=code_filter)
@@ -51,7 +51,7 @@ def populate_product_list_context(request, context):
     context['supplier_filter_form'] = supplier_filter_form
     
     # Add selected values for JavaScript
-    context['selected_categories'] = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
-    context['selected_suppliers'] = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
+    context['selected_categories'] = category_filter
+    context['selected_suppliers'] = supplier_filter
 
 
