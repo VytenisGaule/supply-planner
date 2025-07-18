@@ -9,11 +9,22 @@ def populate_product_list_context(request, context):
     """
     Context filler for product list data with pagination
     """
-    products: QuerySet = Product.objects.select_related('category').prefetch_related('suppliers').all()
-    items_per_page: int = request.session.get('items_per_page', 20)
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
+    code_filter: str = filter_data.get('code', '')
+    name_filter: str = filter_data.get('name', '')
+    category_filter: list = filter_data.get('categories', [])
+    supplier_filter: list = filter_data.get('suppliers', [])
+    products: QuerySet = Product.objects.select_related('category').prefetch_related('suppliers').all()
+    if code_filter:
+        products = products.filter(kodas__icontains=code_filter)
+    if name_filter:
+        products = products.filter(pavadinimas__icontains=name_filter)
+    if category_filter:
+        products = products.filter(category__id__in=category_filter)
+    if supplier_filter:
+        products = products.filter(suppliers__id__in=supplier_filter).distinct()
+    items_per_page: int = request.session.get('items_per_page', 20)
     
-    # Create form with current value
     items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
     code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
     name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
