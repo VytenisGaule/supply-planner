@@ -6,6 +6,24 @@ from app.models import Product
 from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm
 
 
+def apply_relation_filter(queryset: QuerySet, filter_list: list, field_name: str) -> QuerySet:
+    """ Apply filtering   """
+    if not filter_list:
+        return queryset
+    if 'empty' in filter_list:
+        specific_ids = [item_id for item_id in filter_list if item_id != 'empty']
+        if specific_ids:
+            filtered_queryset = queryset.filter(
+                Q(**{f'{field_name}__isnull': True}) | 
+                Q(**{f'{field_name}__id__in': specific_ids})
+            )
+        else:
+            filtered_queryset = queryset.filter(**{f'{field_name}__isnull': True})
+    else:
+        filtered_queryset = queryset.filter(**{f'{field_name}__id__in': filter_list})
+    return filtered_queryset.distinct()
+
+
 def populate_product_list_context(request, context):
     """
     Context filler for product list data with pagination
@@ -25,40 +43,10 @@ def populate_product_list_context(request, context):
         products = products.filter(pavadinimas__icontains=name_filter)
     
     if category_filter:
-        # Handle both "No category" ('empty') and specific categories
-        if 'empty' in category_filter:
-            # If "No category" is selected, include products with no category
-            category_ids = [cat_id for cat_id in category_filter if cat_id != 'empty']
-            if category_ids:
-                # Both "No category" and specific categories selected
-                products = products.filter(
-                    Q(category__isnull=True) | 
-                    Q(category__id__in=category_ids)
-                )
-            else:
-                # Only "No category" selected
-                products = products.filter(category__isnull=True)
-        else:
-            # Only specific categories selected
-            products = products.filter(category__id__in=category_filter)
+        products = apply_relation_filter(products, category_filter, 'category')
     
     if supplier_filter:
-        # Handle both "No suppliers" ('empty') and specific suppliers
-        if 'empty' in supplier_filter:
-            # If "No suppliers" is selected, include products with no suppliers
-            supplier_ids = [sup_id for sup_id in supplier_filter if sup_id != 'empty']
-            if supplier_ids:
-                # Both "No suppliers" and specific suppliers selected
-                products = products.filter(
-                    Q(suppliers__isnull=True) | 
-                    Q(suppliers__id__in=supplier_ids)
-                ).distinct()
-            else:
-                # Only "No suppliers" selected
-                products = products.filter(suppliers__isnull=True)
-        else:
-            # Only specific suppliers selected
-            products = products.filter(suppliers__id__in=supplier_filter).distinct()
+        products = apply_relation_filter(products, supplier_filter, 'suppliers')
     
     items_per_page: int = request.session.get('items_per_page', 20)
     

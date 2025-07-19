@@ -982,3 +982,238 @@ class GetCurrentStockTestCase(TestCase):
         # Average demand = 5, current stock = 50, so 50/5 = 10 days
         remainder = self.product.get_remainder_days(days_back=5)
         self.assertEqual(remainder, 10)
+
+
+class ApplyRelationFilterTestCase(TestCase):
+    """Test cases for apply_relation_filter function"""
+    
+    def setUp(self):
+        """Set up test data"""
+        # Create categories
+        self.category1 = Category.objects.create(
+            category_code="CAT1",
+            name="Electronics"
+        )
+        self.category2 = Category.objects.create(
+            category_code="CAT2", 
+            name="Books"
+        )
+        
+        # Create suppliers
+        self.supplier1 = Supplier.objects.create(
+            company_name="Supplier One",
+            email="supplier1@test.com"
+        )
+        self.supplier2 = Supplier.objects.create(
+            company_name="Supplier Two",
+            email="supplier2@test.com"
+        )
+        
+        # Create products with categories and suppliers
+        self.product1 = Product.objects.create(
+            kodas="PROD001",
+            pavadinimas="Laptop",
+            category=self.category1,
+            last_purchase_price=Decimal('999.99')
+        )
+        self.product1.suppliers.add(self.supplier1)
+        
+        self.product2 = Product.objects.create(
+            kodas="PROD002",
+            pavadinimas="Python Book",
+            category=self.category2,
+            last_purchase_price=Decimal('49.99')
+        )
+        self.product2.suppliers.add(self.supplier2)
+        
+        # Product without category but with supplier
+        self.product3 = Product.objects.create(
+            kodas="PROD003",
+            pavadinimas="Mystery Item",
+            category=None,
+            last_purchase_price=Decimal('25.00')
+        )
+        self.product3.suppliers.add(self.supplier1)
+        
+        # Product without suppliers but with category
+        self.product4 = Product.objects.create(
+            kodas="PROD004",
+            pavadinimas="Orphan Product",
+            category=self.category1,
+            last_purchase_price=Decimal('15.00')
+        )
+        
+        # Product with no category and no suppliers
+        self.product5 = Product.objects.create(
+            kodas="PROD005",
+            pavadinimas="Truly Orphan Product",
+            category=None,
+            last_purchase_price=Decimal('5.00')
+        )
+        
+        # Product with multiple suppliers
+        self.product6 = Product.objects.create(
+            kodas="PROD006",
+            pavadinimas="Multi-Supplier Product",
+            category=self.category2,
+            last_purchase_price=Decimal('100.00')
+        )
+        self.product6.suppliers.add(self.supplier1, self.supplier2)
+    
+    def test_apply_relation_filter_empty_filter_list(self):
+        """Test that empty filter list returns original queryset"""
+        from app.helpers.context import apply_relation_filter
+        
+        original_queryset = Product.objects.all()
+        result = apply_relation_filter(original_queryset, [], 'category')
+        
+        self.assertEqual(list(result), list(original_queryset))
+    
+    def test_apply_relation_filter_category_specific_ids(self):
+        """Test filtering by specific category IDs"""
+        from app.helpers.context import apply_relation_filter
+        
+        queryset = Product.objects.all()
+        filter_list = [str(self.category1.id)]
+        
+        result = apply_relation_filter(queryset, filter_list, 'category')
+        
+        # Should return products with category1 (product1, product4)
+        self.assertEqual(result.count(), 2)
+        self.assertIn(self.product1, result)
+        self.assertIn(self.product4, result)
+        self.assertNotIn(self.product2, result)  # Different category
+        self.assertNotIn(self.product3, result)  # No category
+    
+    def test_apply_relation_filter_category_empty_only(self):
+        """Test filtering by 'empty' category only"""
+        from app.helpers.context import apply_relation_filter
+        
+        queryset = Product.objects.all()
+        filter_list = ['empty']
+        
+        result = apply_relation_filter(queryset, filter_list, 'category')
+        
+        # Should return products with no category (product3, product5)
+        self.assertEqual(result.count(), 2)
+        self.assertIn(self.product3, result)
+        self.assertIn(self.product5, result)
+        self.assertNotIn(self.product1, result)  # Has category
+    
+    def test_apply_relation_filter_category_empty_and_specific(self):
+        """Test filtering by both 'empty' and specific category IDs"""
+        from app.helpers.context import apply_relation_filter
+        
+        queryset = Product.objects.all()
+        filter_list = ['empty', str(self.category1.id)]
+        
+        result = apply_relation_filter(queryset, filter_list, 'category')
+        
+        # Should return products with no category OR category1
+        self.assertEqual(result.count(), 4)
+        self.assertIn(self.product1, result)  # category1
+        self.assertIn(self.product3, result)  # no category
+        self.assertIn(self.product4, result)  # category1
+        self.assertIn(self.product5, result)  # no category
+        self.assertNotIn(self.product2, result)  # category2
+        self.assertNotIn(self.product6, result)  # category2
+    
+    def test_apply_relation_filter_suppliers_specific_ids(self):
+        """Test filtering by specific supplier IDs"""
+        from app.helpers.context import apply_relation_filter
+        
+        queryset = Product.objects.all()
+        filter_list = [str(self.supplier1.id)]
+        
+        result = apply_relation_filter(queryset, filter_list, 'suppliers')
+        
+        # Should return products with supplier1 (product1, product3, product6)
+        self.assertEqual(result.count(), 3)
+        self.assertIn(self.product1, result)
+        self.assertIn(self.product3, result)
+        self.assertIn(self.product6, result)  # Has multiple suppliers including supplier1
+        self.assertNotIn(self.product2, result)  # Different supplier
+        self.assertNotIn(self.product4, result)  # No suppliers
+    
+    def test_apply_relation_filter_suppliers_empty_only(self):
+        """Test filtering by 'empty' suppliers only"""
+        from app.helpers.context import apply_relation_filter
+        
+        queryset = Product.objects.all()
+        filter_list = ['empty']
+        
+        result = apply_relation_filter(queryset, filter_list, 'suppliers')
+        
+        # Should return products with no suppliers (product4, product5)
+        self.assertEqual(result.count(), 2)
+        self.assertIn(self.product4, result)
+        self.assertIn(self.product5, result)
+        self.assertNotIn(self.product1, result)  # Has suppliers
+    
+    def test_apply_relation_filter_suppliers_empty_and_specific(self):
+        """Test filtering by both 'empty' and specific supplier IDs"""
+        from app.helpers.context import apply_relation_filter
+        
+        queryset = Product.objects.all()
+        filter_list = ['empty', str(self.supplier2.id)]
+        
+        result = apply_relation_filter(queryset, filter_list, 'suppliers')
+        
+        # Should return products with no suppliers OR supplier2
+        self.assertEqual(result.count(), 4)
+        self.assertIn(self.product2, result)  # supplier2
+        self.assertIn(self.product4, result)  # no suppliers
+        self.assertIn(self.product5, result)  # no suppliers
+        self.assertIn(self.product6, result)  # has supplier2 (and supplier1)
+        self.assertNotIn(self.product1, result)  # only supplier1
+        self.assertNotIn(self.product3, result)  # only supplier1
+    
+    def test_apply_relation_filter_multiple_specific_ids(self):
+        """Test filtering by multiple specific IDs"""
+        from app.helpers.context import apply_relation_filter
+        
+        queryset = Product.objects.all()
+        filter_list = [str(self.category1.id), str(self.category2.id)]
+        
+        result = apply_relation_filter(queryset, filter_list, 'category')
+        
+        # Should return products with category1 OR category2
+        self.assertEqual(result.count(), 4)
+        self.assertIn(self.product1, result)  # category1
+        self.assertIn(self.product2, result)  # category2
+        self.assertIn(self.product4, result)  # category1
+        self.assertIn(self.product6, result)  # category2
+        self.assertNotIn(self.product3, result)  # no category
+        self.assertNotIn(self.product5, result)  # no category
+    
+    def test_apply_relation_filter_distinct_applied(self):
+        """Test that distinct() is applied to prevent duplicates"""
+        from app.helpers.context import apply_relation_filter
+        
+        # For ManyToMany relationships, we might get duplicates without distinct()
+        queryset = Product.objects.all()
+        filter_list = [str(self.supplier1.id), str(self.supplier2.id)]
+        
+        result = apply_relation_filter(queryset, filter_list, 'suppliers')
+        
+        # product6 has both suppliers, but should only appear once
+        product_ids = [p.id for p in result]
+        unique_product_ids = list(set(product_ids))
+        
+        self.assertEqual(len(product_ids), len(unique_product_ids), 
+                        "Duplicate products found - distinct() not working")
+    
+    def test_apply_relation_filter_queryset_immutability(self):
+        """Test that original queryset is not modified"""
+        from app.helpers.context import apply_relation_filter
+        
+        original_queryset = Product.objects.all()
+        original_count = original_queryset.count()
+        
+        # Apply filter
+        result = apply_relation_filter(original_queryset, [str(self.category1.id)], 'category')
+        
+        # Original queryset should be unchanged
+        self.assertEqual(original_queryset.count(), original_count)
+        self.assertEqual(original_queryset.count(), 6)  # All products
+        self.assertLess(result.count(), original_count)  # Filtered result is smaller
