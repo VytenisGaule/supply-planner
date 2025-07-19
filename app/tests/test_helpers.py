@@ -636,3 +636,199 @@ class PopulateProductListContextTestCase(TestCase):
         self.assertTrue(context['name_filter_form'].is_valid())
         self.assertEqual(context['code_filter_form'].cleaned_data['code'], 'TEST')
         self.assertEqual(context['name_filter_form'].cleaned_data['name'], 'Product')
+
+
+class RemainderDaysTestCase(TestCase):
+    """Test cases for Product.remainder_days method"""
+    
+    def setUp(self):
+        """Set up test data"""
+        self.category = Category.objects.create(
+            category_code="TEST_REMAINDER",
+            name="Test Remainder Category"
+        )
+        
+        self.product = Product.objects.create(
+            kodas="REMAINDER_TEST_001",
+            pavadinimas="Test Product for Remainder Days",
+            category=self.category,
+            last_purchase_price=Decimal('50.00'),
+            lead_time=30
+        )
+        
+        # Create test date range - use recent dates so they fall within the query range
+        self.today = date.today()
+        self.base_date = self.today - timedelta(days=9)  # Start 9 days ago for 10 days total (0-9 days ago)
+        
+    def create_metrics_with_pattern(self, sales_pattern, stock_pattern, potential_sales_pattern=None):
+        """Helper to create metrics with specific patterns"""
+        for i, (sales, stock) in enumerate(zip(sales_pattern, stock_pattern)):
+            potential_sales = potential_sales_pattern[i] if potential_sales_pattern else sales
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.base_date + timedelta(days=i),
+                sales_quantity=sales,
+                stock=stock,
+                potential_sales=potential_sales
+            )
+    
+    def test_remainder_days_basic_calculation(self):
+        """Test basic remainder days calculation"""
+        # Create 10 days of consistent sales (5 per day) with good stock
+        sales_pattern = [5] * 10
+        stock_pattern = [100] * 9 + [50]  # Last day has 50 stock
+        
+        self.create_metrics_with_pattern(sales_pattern, stock_pattern)
+        
+        # Average daily demand should be 5, current stock is 50
+        # Expected remainder days: 50 / 5 = 10 days
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 10)
+    
+    def test_remainder_days_with_varying_demand(self):
+        """Test remainder days with varying daily demand"""
+        # Create pattern: 2, 4, 6, 4, 2, 4, 6, 4, 2, 4 (avg = 3.8)
+        sales_pattern = [2, 4, 6, 4, 2, 4, 6, 4, 2, 4]
+        # Set all stock to 100, except the last day which has current stock of 38
+        stock_pattern = [100] * 9 + [38]  # Last day has 38 stock
+        
+        self.create_metrics_with_pattern(sales_pattern, stock_pattern)
+        
+        # Average daily demand: (2+4+6+4+2+4+6+4+2+4) / 10 = 3.8
+        # Expected remainder days: 38 / 3.8 = 10 days
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 10)
+    
+    def test_remainder_days_zero_stock(self):
+        """Test remainder days when current stock is zero"""
+        sales_pattern = [5] * 10
+        stock_pattern = [100] * 9 + [0]  # Last day has 0 stock
+        
+        self.create_metrics_with_pattern(sales_pattern, stock_pattern)
+        
+        # Should return 0 when stock is 0
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 0)
+    
+    def test_remainder_days_zero_demand(self):
+        """Test remainder days when average demand is zero"""
+        sales_pattern = [0] * 10  # No sales for 10 days
+        stock_pattern = [100] * 9 + [50]  # Last day has 50 stock
+        
+        self.create_metrics_with_pattern(sales_pattern, stock_pattern)
+        
+        # Should return 0 when demand is 0
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 0)
+    
+    def test_remainder_days_no_metrics(self):
+        """Test remainder days when product has no metrics"""
+        # Should return 0 when no metrics exist
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 0)
+    
+    def test_remainder_days_null_potential_sales(self):
+        """Test remainder days when potential_sales are NULL"""
+        # Create metrics with NULL potential_sales
+        for i in range(10):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.base_date + timedelta(days=i),
+                sales_quantity=5,
+                stock=100 - i,
+                potential_sales=None  # NULL potential sales
+            )
+        
+        # Should return 0 when all potential_sales are NULL
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 0)
+    
+    def test_remainder_days_mixed_null_values(self):
+        """Test remainder days with some NULL potential_sales values"""
+        # Create 10 metrics, half with NULL potential_sales
+        for i in range(10):
+            potential_sales = 4 if i < 5 else None
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.base_date + timedelta(days=i),
+                sales_quantity=4,
+                stock=100 - i,
+                potential_sales=potential_sales
+            )
+        
+        # Average should be calculated only from non-NULL values
+        # First 5 days have potential_sales=4, so average=4
+        # Current stock = 91, so remainder = 91/4 = 22.75 → 22 days
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 22)
+    
+    def test_remainder_days_fractional_result(self):
+        """Test remainder days with fractional calculation"""
+        # Create pattern that results in fractional days
+        sales_pattern = [3] * 10  # Average daily demand = 3
+        stock_pattern = [100] * 9 + [10]  # Current stock = 10
+        
+        self.create_metrics_with_pattern(sales_pattern, stock_pattern)
+        
+        # Expected: 10 / 3 = 3.33... → should return 3 (int conversion)
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 3)
+    
+    def test_remainder_days_large_stock(self):
+        """Test remainder days with large stock amount"""
+        sales_pattern = [2] * 10  # Average daily demand = 2
+        stock_pattern = [1000] * 9 + [1000]  # Large stock = 1000
+        
+        self.create_metrics_with_pattern(sales_pattern, stock_pattern)
+        
+        # Expected: 1000 / 2 = 500 days
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 500)
+    
+    def test_remainder_days_custom_days_back(self):
+        """Test remainder days with custom days_back parameter"""
+        # Create 20 days of data with different patterns
+        recent_sales = [10] * 10  # Last 10 days: high sales
+        older_sales = [2] * 10    # Older 10 days: low sales
+        all_sales = older_sales + recent_sales
+        
+        stock_pattern = [100] * 19 + [100]
+        
+        # Use recent dates starting from 20 days ago
+        base_date = date.today() - timedelta(days=19)
+        for i, (sales, stock) in enumerate(zip(all_sales, stock_pattern)):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=base_date + timedelta(days=i),
+                sales_quantity=sales,
+                stock=stock,
+                potential_sales=sales
+            )
+        
+        # Test with days_back=10 (only recent high sales)
+        remainder_recent = self.product.remainder_days(days_back=10)
+        # Average from last 10 days = 10, stock = 100, so 100/10 = 10 days
+        self.assertEqual(remainder_recent, 10)
+        
+        # Test with days_back=20 (all sales including low sales)
+        remainder_all = self.product.remainder_days(days_back=20)
+        # Average from all 20 days = (2*10 + 10*10)/20 = 120/20 = 6
+        # Stock = 100, so 100/6 = 16.66... → 16 days
+        self.assertEqual(remainder_all, 16)
+    
+    def test_remainder_days_uses_potential_sales_not_actual(self):
+        """Test that remainder_days uses potential_sales, not actual sales_quantity"""
+        # Create data where potential_sales differs from actual sales
+        for i in range(10):
+            DailyMetrics.objects.create(
+                product=self.product,
+                date=self.base_date + timedelta(days=i),
+                sales_quantity=2,      # Actual sales = 2
+                stock=100 - i,
+                potential_sales=6      # Potential sales = 6 (higher)
+            )
+        
+        # Should use potential_sales (6) not sales_quantity (2)
+        # Average demand = 6, current stock = 91, so 91/6 = 15.16... → 15 days
+        remainder = self.product.remainder_days(days_back=10)
+        self.assertEqual(remainder, 15)

@@ -190,6 +190,16 @@ class Product(models.Model):
         ).aggregate(avg=Avg('potential_sales'))['avg']
         
         return float(avg_sales) if avg_sales is not None else None
+    
+    def remainder_days(self, days_back: int = 365) -> int:
+        """Calculate average remaining days of stock based on average daily demand"""
+        avg_daily_demand: Optional[float] = self.average_daily_demand(days_back)
+        if avg_daily_demand is None or avg_daily_demand <= 0:
+            return 0
+        latest_metric: DailyMetrics = self.daily_metrics.order_by('-date').first()
+        if not latest_metric or latest_metric.stock <= 0:
+            return 0
+        return int(latest_metric.stock / avg_daily_demand)
 
 class DailyMetrics(models.Model):
     """
