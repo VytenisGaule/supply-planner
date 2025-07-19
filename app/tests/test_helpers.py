@@ -1,8 +1,11 @@
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from datetime import date, timedelta
 from decimal import Decimal
-from app.models import Product, Category, DailyMetrics
+from unittest.mock import Mock
+from django.http import QueryDict
+from app.models import Product, Category, Supplier, DailyMetrics
 from app.helpers.utils import get_average_potential_sales
+from app.helpers.context import populate_product_list_context
 
 
 class HelpersUtilsTestCase(TestCase):
@@ -380,3 +383,256 @@ class UpdateAllPotentialSalesTestCase(TestCase):
         # All should have potential_sales = 4.0 (good stock days)
         for metric in saved_metrics:
             self.assertEqual(metric.potential_sales, 4.0)
+
+
+class PopulateProductListContextTestCase(TestCase):
+    """Test cases for populate_product_list_context function"""
+    
+    def setUp(self):
+        """Set up test data"""
+        self.factory = RequestFactory()
+        
+        # Create categories
+        self.category1 = Category.objects.create(
+            category_code="CAT1",
+            name="Electronics"
+        )
+        self.category2 = Category.objects.create(
+            category_code="CAT2", 
+            name="Books"
+        )
+        
+        # Create suppliers
+        self.supplier1 = Supplier.objects.create(
+            company_name="Supplier One",
+            email="john@supplier1.com"
+        )
+        self.supplier2 = Supplier.objects.create(
+            company_name="Supplier Two",
+            email="jane@supplier2.com"
+        )
+        
+        # Create products
+        self.product1 = Product.objects.create(
+            kodas="PROD001",
+            pavadinimas="Laptop",
+            category=self.category1,
+            last_purchase_price=Decimal('999.99')
+        )
+        self.product1.suppliers.add(self.supplier1)
+        
+        self.product2 = Product.objects.create(
+            kodas="PROD002",
+            pavadinimas="Python Book",
+            category=self.category2,
+            last_purchase_price=Decimal('49.99')
+        )
+        self.product2.suppliers.add(self.supplier2)
+        
+        # Product without category
+        self.product3 = Product.objects.create(
+            kodas="PROD003",
+            pavadinimas="Mystery Item",
+            category=None,
+            last_purchase_price=Decimal('25.00')
+        )
+        
+        # Product without suppliers
+        self.product4 = Product.objects.create(
+            kodas="PROD004",
+            pavadinimas="Orphan Product",
+            category=self.category1,
+            last_purchase_price=Decimal('15.00')
+        )
+    
+    def create_mock_request(self, session_data=None, get_data=None, post_data=None):
+        """Create a mock request with session data"""
+        request = self.factory.get('/')
+        request.session = session_data or {}
+        request.GET = get_data or {}
+        request.POST = post_data or {}
+        return request
+    
+    def test_populate_product_list_context_basic(self):
+        """Test basic context population without filters"""
+        request = self.create_mock_request()
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Check basic context items
+        self.assertIn('products', context)
+        self.assertIn('paginator', context)
+        self.assertIn('items_per_page', context)
+        self.assertIn('items_per_page_form', context)
+        self.assertIn('code_filter_form', context)
+        self.assertIn('name_filter_form', context)
+        self.assertIn('category_filter_form', context)
+        self.assertIn('supplier_filter_form', context)
+        self.assertIn('selected_categories', context)
+        self.assertIn('selected_suppliers', context)
+        
+        # Check default values
+        self.assertEqual(context['items_per_page'], 20)
+        self.assertEqual(context['selected_categories'], [])
+        self.assertEqual(context['selected_suppliers'], [])
+        
+        # Check that all products are included
+        self.assertEqual(context['products'].paginator.count, 4)
+    
+    def test_populate_product_list_context_with_code_filter(self):
+        """Test context population with code filter"""
+        filter_data = QueryDict('code=PROD001')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should only show product with code containing 'PROD001'
+        self.assertEqual(context['products'].paginator.count, 1)
+        self.assertEqual(context['products'][0].kodas, 'PROD001')
+    
+    def test_populate_product_list_context_with_name_filter(self):
+        """Test context population with name filter"""
+        filter_data = QueryDict('name=Book')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should only show product with name containing 'Book'
+        self.assertEqual(context['products'].paginator.count, 1)
+        self.assertEqual(context['products'][0].pavadinimas, 'Python Book')
+    
+    def test_populate_product_list_context_with_category_filter(self):
+        """Test context population with category filter"""
+        filter_data = QueryDict(f'categories={self.category1.id}')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should show products in category1 (Laptop and Orphan Product)
+        self.assertEqual(context['products'].paginator.count, 2)
+        product_names = [p.pavadinimas for p in context['products']]
+        self.assertIn('Laptop', product_names)
+        self.assertIn('Orphan Product', product_names)
+    
+    def test_populate_product_list_context_with_empty_category_filter(self):
+        """Test context population with 'empty' category filter (no category)"""
+        filter_data = QueryDict('categories=empty')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should only show product without category (Mystery Item)
+        self.assertEqual(context['products'].paginator.count, 1)
+        self.assertEqual(context['products'][0].pavadinimas, 'Mystery Item')
+    
+    def test_populate_product_list_context_with_supplier_filter(self):
+        """Test context population with supplier filter"""
+        filter_data = QueryDict(f'suppliers={self.supplier1.id}')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should only show product from supplier1 (Laptop)
+        self.assertEqual(context['products'].paginator.count, 1)
+        self.assertEqual(context['products'][0].pavadinimas, 'Laptop')
+    
+    def test_populate_product_list_context_with_empty_supplier_filter(self):
+        """Test context population with 'empty' supplier filter (no suppliers)"""
+        filter_data = QueryDict('suppliers=empty')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should show products without suppliers (Mystery Item and Orphan Product)
+        self.assertEqual(context['products'].paginator.count, 2)
+        product_names = [p.pavadinimas for p in context['products']]
+        self.assertIn('Mystery Item', product_names)
+        self.assertIn('Orphan Product', product_names)
+    
+    def test_populate_product_list_context_with_combined_filters(self):
+        """Test context population with multiple filters"""
+        # Filter by category1 AND supplier1
+        filter_data = QueryDict(f'categories={self.category1.id}&suppliers={self.supplier1.id}')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should only show Laptop (in category1 AND has supplier1)
+        self.assertEqual(context['products'].paginator.count, 1)
+        self.assertEqual(context['products'][0].pavadinimas, 'Laptop')
+    
+    def test_populate_product_list_context_with_mixed_category_filter(self):
+        """Test context population with both 'empty' and specific category"""
+        filter_data = QueryDict(f'categories=empty&categories={self.category1.id}')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should show products with no category OR in category1
+        self.assertEqual(context['products'].paginator.count, 3)
+        product_names = [p.pavadinimas for p in context['products']]
+        self.assertIn('Mystery Item', product_names)  # No category
+        self.assertIn('Laptop', product_names)        # Category1
+        self.assertIn('Orphan Product', product_names) # Category1
+    
+    def test_populate_product_list_context_pagination(self):
+        """Test context pagination functionality"""
+        # Set items per page to 2
+        request = self.create_mock_request(session_data={'items_per_page': 2})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should have 2 pages (4 products, 2 per page)
+        self.assertEqual(context['paginator'].num_pages, 2)
+        self.assertEqual(len(context['products']), 2)
+        self.assertEqual(context['items_per_page'], 2)
+    
+    def test_populate_product_list_context_page_number(self):
+        """Test context with specific page number"""
+        # Set items per page to 2 and request page 2
+        request = self.create_mock_request(
+            session_data={'items_per_page': 2},
+            get_data={'page': '2'}
+        )
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Should show page 2
+        self.assertEqual(context['products'].number, 2)
+    
+    def test_populate_product_list_context_selected_values(self):
+        """Test that selected values are properly passed to context"""
+        filter_data = QueryDict(f'categories={self.category1.id}&suppliers={self.supplier1.id}')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Check selected values
+        self.assertEqual(context['selected_categories'], [str(self.category1.id)])
+        self.assertEqual(context['selected_suppliers'], [str(self.supplier1.id)])
+    
+    def test_populate_product_list_context_form_validation(self):
+        """Test that forms are properly validated"""
+        filter_data = QueryDict('code=TEST&name=Product')
+        request = self.create_mock_request(session_data={'filter_data': filter_data})
+        context = {}
+        
+        populate_product_list_context(request, context)
+        
+        # Forms should be valid and contain the filter data
+        self.assertTrue(context['code_filter_form'].is_valid())
+        self.assertTrue(context['name_filter_form'].is_valid())
+        self.assertEqual(context['code_filter_form'].cleaned_data['code'], 'TEST')
+        self.assertEqual(context['name_filter_form'].cleaned_data['name'], 'Product')
