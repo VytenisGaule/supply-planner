@@ -1209,7 +1209,7 @@ class FixtureTestCase(TestCase):
 
 
 class AverageDailyDemandTestCase(TestCase):
-    """Test cases for Product.average_daily_demand method"""
+    """Test cases for Product.get_average_daily_demand method"""
     
     def setUp(self):
         """Set up test data"""
@@ -1289,40 +1289,40 @@ class AverageDailyDemandTestCase(TestCase):
                 potential_sales=2.0
             )
     
-    def test_average_daily_demand_default_period(self):
+    def test_get_average_daily_demand_default_period(self):
         """Test average daily demand calculation for default 365-day period"""
-        result = self.product.average_daily_demand()
+        result = self.product.get_average_daily_demand()
         
         # Should include days 1-150 (all with potential_sales except 91-120)
         # Expected: (5.0*30 + 3.0*30 + 7.0*30 + 2.0*30) / 120 = 510/120 = 4.25
         expected = (5.0*30 + 3.0*30 + 7.0*30 + 2.0*30) / 120
         self.assertEqual(result, expected)
     
-    def test_average_daily_demand_30_days(self):
+    def test_get_average_daily_demand_30_days(self):
         """Test average daily demand calculation for last 30 days"""
-        result = self.product.average_daily_demand(days_back=30)
+        result = self.product.get_average_daily_demand(days_back=30)
         
         # Should only include last 30 days (all with potential_sales = 5.0)
         self.assertEqual(result, 5.0)
     
-    def test_average_daily_demand_60_days(self):
+    def test_get_average_daily_demand_60_days(self):
         """Test average daily demand calculation for last 60 days"""
-        result = self.product.average_daily_demand(days_back=60)
+        result = self.product.get_average_daily_demand(days_back=60)
         
         # Should include days 1-60: (5.0*30 + 3.0*30) / 60 = 240/60 = 4.0
         expected = (5.0*30 + 3.0*30) / 60
         self.assertEqual(result, expected)
     
-    def test_average_daily_demand_with_null_potential_sales(self):
+    def test_get_average_daily_demand_with_null_potential_sales(self):
         """Test average daily demand when some metrics have NULL potential_sales"""
-        result = self.product.average_daily_demand(days_back=120)
+        result = self.product.get_average_daily_demand(days_back=120)
         
         # Should include days 1-90 only (excludes days 91-120 with NULL potential_sales)
         # Expected: (5.0*30 + 3.0*30 + 7.0*30) / 90 = 450/90 = 5.0
         expected = (5.0*30 + 3.0*30 + 7.0*30) / 90
         self.assertEqual(result, expected)
     
-    def test_average_daily_demand_no_potential_sales_data(self):
+    def test_get_average_daily_demand_no_potential_sales_data(self):
         """Test average daily demand when no potential_sales data exists"""
         # Create a product with no potential_sales data
         test_product = Product.objects.create(
@@ -1342,10 +1342,10 @@ class AverageDailyDemandTestCase(TestCase):
                 potential_sales=None
             )
         
-        result = test_product.average_daily_demand()
+        result = test_product.get_average_daily_demand()
         self.assertIsNone(result)
     
-    def test_average_daily_demand_no_metrics(self):
+    def test_get_average_daily_demand_no_metrics(self):
         """Test average daily demand when product has no metrics"""
         empty_product = Product.objects.create(
             kodas="EMPTY_PRODUCT",
@@ -1353,22 +1353,22 @@ class AverageDailyDemandTestCase(TestCase):
             category=self.category
         )
         
-        result = empty_product.average_daily_demand()
+        result = empty_product.get_average_daily_demand()
         self.assertIsNone(result)
     
-    def test_average_daily_demand_future_date_range(self):
+    def test_get_average_daily_demand_future_date_range(self):
         """Test average daily demand with date range in the future (no data)"""
         from datetime import timedelta
         
         # Look back only 1 day from 2 years ago (no data should exist)
-        result = self.product.average_daily_demand(days_back=1)
+        result = self.product.get_average_daily_demand(days_back=1)
         
         # Since we're looking at very recent data and our test data starts from 400 days ago,
         # this should find the recent data we created
         self.assertIsNotNone(result)
         self.assertEqual(result, 5.0)  # Should find the last 30 days data
     
-    def test_average_daily_demand_zero_potential_sales(self):
+    def test_get_average_daily_demand_zero_potential_sales(self):
         """Test average daily demand with zero potential_sales values"""
         # Create product with zero potential_sales
         zero_product = Product.objects.create(
@@ -1387,10 +1387,10 @@ class AverageDailyDemandTestCase(TestCase):
                 potential_sales=0.0
             )
         
-        result = zero_product.average_daily_demand()
+        result = zero_product.get_average_daily_demand()
         self.assertEqual(result, 0.0)
     
-    def test_average_daily_demand_mixed_zero_and_positive(self):
+    def test_get_average_daily_demand_mixed_zero_and_positive(self):
         """Test average daily demand with mix of zero and positive potential_sales"""
         mixed_product = Product.objects.create(
             kodas="MIXED_DEMAND",
@@ -1419,11 +1419,11 @@ class AverageDailyDemandTestCase(TestCase):
                 potential_sales=10.0
             )
         
-        result = mixed_product.average_daily_demand(days_back=10)
+        result = mixed_product.get_average_daily_demand(days_back=10)
         # Expected: (0.0*5 + 10.0*5) / 10 = 50/10 = 5.0
         self.assertEqual(result, 5.0)
     
-    def test_average_daily_demand_decimal_precision(self):
+    def test_get_average_daily_demand_decimal_precision(self):
         """Test average daily demand with decimal precision"""
         decimal_product = Product.objects.create(
             kodas="DECIMAL_DEMAND",
@@ -1443,14 +1443,14 @@ class AverageDailyDemandTestCase(TestCase):
                 potential_sales=value
             )
         
-        result = decimal_product.average_daily_demand(days_back=5)
+        result = decimal_product.get_average_daily_demand(days_back=5)
         expected = sum(potential_sales_values) / len(potential_sales_values)
         self.assertAlmostEqual(result, expected, places=2)
     
-    def test_average_daily_demand_return_type(self):
+    def test_get_average_daily_demand_return_type(self):
         """Test that average_daily_demand returns correct types"""
         # Test with data
-        result_with_data = self.product.average_daily_demand(days_back=30)
+        result_with_data = self.product.get_average_daily_demand(days_back=30)
         self.assertIsInstance(result_with_data, float)
         
         # Test without data
@@ -1459,5 +1459,5 @@ class AverageDailyDemandTestCase(TestCase):
             pavadinimas="Type Test Product",
             category=self.category
         )
-        result_without_data = empty_product.average_daily_demand()
+        result_without_data = empty_product.get_average_daily_demand()
         self.assertIsNone(result_without_data)

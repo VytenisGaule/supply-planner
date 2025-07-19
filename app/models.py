@@ -179,7 +179,7 @@ class Product(models.Model):
                 metric.potential_sales = average_potential_sales
             metric.save()
     
-    def average_daily_demand(self, days_back: int = 365) -> Optional[float]:
+    def get_average_daily_demand(self, days_back: int = 365) -> Optional[float]:
         """Calculate average daily demand from potential_sales"""
         end_date: datetime.date = datetime.now().date()
         start_date: datetime.date = end_date - timedelta(days=days_back - 1)
@@ -191,15 +191,20 @@ class Product(models.Model):
         
         return float(avg_sales) if avg_sales is not None else None
     
-    def remainder_days(self, days_back: int = 365) -> int:
+    def get_remainder_days(self, days_back: int = 365) -> int:
         """Calculate average remaining days of stock based on average daily demand"""
-        avg_daily_demand: Optional[float] = self.average_daily_demand(days_back)
+        avg_daily_demand: Optional[float] = self.get_average_daily_demand(days_back)
         if avg_daily_demand is None or avg_daily_demand <= 0:
             return 0
+        latest_stock: int = self.get_current_stock()
+        return int(latest_stock / avg_daily_demand)
+    
+    def get_current_stock(self) -> int:
+        """Get current stock level from the latest daily metrics"""
         latest_metric: DailyMetrics = self.daily_metrics.order_by('-date').first()
-        if not latest_metric or latest_metric.stock <= 0:
+        if not latest_metric or not latest_metric.stock:
             return 0
-        return int(latest_metric.stock / avg_daily_demand)
+        return latest_metric.stock
 
 class DailyMetrics(models.Model):
     """
