@@ -1,9 +1,9 @@
 from django.core.paginator import Paginator
-from django.db.models import QuerySet, Q
-from django.db import models
+from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField, FloatField, Case, When, F
 from django.http import QueryDict
-from app.models import Product
+from app.models import Product, DailyMetrics
 from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm
+from datetime import datetime, timedelta
 
 
 def apply_relation_filter(queryset: QuerySet, filter_list: list, field_name: str) -> QuerySet:
@@ -33,7 +33,43 @@ def populate_product_list_context(request, context):
     name_filter: str = filter_data.get('name', '')
     category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
     supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
-    products: QuerySet = Product.objects.select_related('category').prefetch_related('suppliers').all()
+    
+    # Min/max filters
+    min_stock: str = filter_data.get('min_stock', '')
+    max_stock: str = filter_data.get('max_stock', '')
+    min_daily_demand: str = filter_data.get('min_daily_demand', '')
+    max_daily_demand: str = filter_data.get('max_daily_demand', '')
+    min_remainder_days: str = filter_data.get('min_remainder_days', '')
+    max_remainder_days: str = filter_data.get('max_remainder_days', '')
+    
+    # Calculate date range for average daily demand (365 days back)
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=365)
+    
+    # Annotate products with calculated fields
+    products: QuerySet = Product.objects.select_related('category').prefetch_related('suppliers').annotate(
+        # Current stock from latest daily metrics
+        current_stock=Subquery(
+            DailyMetrics.objects.filter(
+                product=OuterRef('pk')
+            ).order_by('-date').values('stock')[:1],
+            output_field=IntegerField()
+        ),
+        # Average daily demand from potential_sales over last 365 days
+        avg_daily_demand=Avg(
+            'daily_metrics__potential_sales',
+            filter=Q(
+                daily_metrics__date__range=[start_date, end_date],
+                daily_metrics__potential_sales__isnull=False
+            )
+        ),
+        # Remainder days calculation: current_stock / avg_daily_demand
+        remainder_days=Case(
+            When(avg_daily_demand__gt=0, then=F('current_stock') / F('avg_daily_demand')),
+            default=999,
+            output_field=IntegerField()
+        )
+    ).all()
     
     # Apply filters to the queryset
     if code_filter:
@@ -47,6 +83,49 @@ def populate_product_list_context(request, context):
     
     if supplier_filter:
         products = apply_relation_filter(products, supplier_filter, 'suppliers')
+    
+    # Apply min/max filters on annotated fields
+    if min_stock:
+        try:
+            min_stock_val = int(min_stock)
+            products = products.filter(current_stock__gte=min_stock_val)
+        except ValueError:
+            pass  # Invalid input, ignore filter
+    
+    if max_stock:
+        try:
+            max_stock_val = int(max_stock)
+            products = products.filter(current_stock__lte=max_stock_val)
+        except ValueError:
+            pass  # Invalid input, ignore filter
+    
+    if min_daily_demand:
+        try:
+            min_daily_demand_val = float(min_daily_demand)
+            products = products.filter(avg_daily_demand__gte=min_daily_demand_val)
+        except ValueError:
+            pass  # Invalid input, ignore filter
+    
+    if max_daily_demand:
+        try:
+            max_daily_demand_val = float(max_daily_demand)
+            products = products.filter(avg_daily_demand__lte=max_daily_demand_val)
+        except ValueError:
+            pass  # Invalid input, ignore filter
+    
+    if min_remainder_days:
+        try:
+            min_remainder_days_val = int(min_remainder_days)
+            products = products.filter(remainder_days__gte=min_remainder_days_val)
+        except ValueError:
+            pass  # Invalid input, ignore filter
+    
+    if max_remainder_days:
+        try:
+            max_remainder_days_val = int(max_remainder_days)
+            products = products.filter(remainder_days__lte=max_remainder_days_val)
+        except ValueError:
+            pass  # Invalid input, ignore filter
     
     items_per_page: int = request.session.get('items_per_page', 20)
     
