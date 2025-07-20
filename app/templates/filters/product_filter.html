@@ -1,6 +1,6 @@
 <tr class="border-b border-gray-200 bg-gray-100" hx-post="{% url 'get_product_filter' %}"
     hx-trigger="change delay:0.25s from:input" hx-target="#product-list" hx-swap="outerHTML"
-    hx-include="[name='code'], [name='name'], [name='categories'], [name='suppliers']">
+    hx-include="[name='code'], [name='name'], [name='categories'], [name='suppliers'], [name='min_stock'], [name='max_stock'], [name='min_daily_demand'], [name='max_daily_demand'], [name='min_remainder_days'], [name='max_remainder_days']">
     <th class="p-1 border-r border-gray-200">
         {{ code_filter_form.code }}
     </th>
@@ -32,12 +32,30 @@
         {% endwith %}
     </th>
     <th class="p-1 border-r border-gray-200">
-        <!-- Current Stock filter - could add min/max inputs later -->
+        <div class="flex gap-1">
+            <input type="text" name="min_stock" placeholder="Min"
+                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <span class="text-xs text-gray-400 self-center">-</span>
+            <input type="text" name="max_stock" placeholder="Max"
+                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+        </div>
     </th>
     <th class="p-1 border-r border-gray-200">
-        <!-- Daily Demand filter - could add min/max inputs later -->
+        <div class="flex gap-1">
+            <input type="text" name="min_daily_demand" placeholder="Min"
+                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <span class="text-xs text-gray-400 self-center">-</span>
+            <input type="text" name="max_daily_demand" placeholder="Max"
+                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+        </div>
     </th>
     <th class="p-1">
-        <!-- Remainder Days filter - could add min/max inputs later -->
+        <div class="flex gap-1">
+            <input type="text" name="min_remainder_days" placeholder="Min"
+                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <span class="text-xs text-gray-400 self-center">-</span>
+            <input type="text" name="max_remainder_days" placeholder="Max"
+                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+        </div>
     </th>
 </tr>

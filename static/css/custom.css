@@ -136,3 +136,15 @@ input[type="text"].text-xs {
     height: 1.5rem;
     box-sizing: border-box;
 }
+
+/* Filter input styles */
+.filter-input {
+    width: 4.5rem !important;
+    min-width: 4.5rem !important;
+}
+
+/* Numeric input validation styling */
+.numeric-input:invalid {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 !important;
+}
