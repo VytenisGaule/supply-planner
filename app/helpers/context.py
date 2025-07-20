@@ -102,6 +102,8 @@ def populate_product_list_context(request, context):
     if min_daily_demand:
         try:
             min_daily_demand_val = float(min_daily_demand)
+            # When min is specified, only include products with valid values >= min
+            # Exclude NULL/N/A products
             products = products.filter(avg_daily_demand__gte=min_daily_demand_val)
         except ValueError:
             pass  # Invalid input, ignore filter
@@ -109,21 +111,34 @@ def populate_product_list_context(request, context):
     if max_daily_demand:
         try:
             max_daily_demand_val = float(max_daily_demand)
-            products = products.filter(avg_daily_demand__lte=max_daily_demand_val)
+            # When max is specified, include products <= max OR NULL/N/A
+            products = products.filter(
+                Q(avg_daily_demand__lte=max_daily_demand_val) | 
+                Q(avg_daily_demand__isnull=True)
+            )
         except ValueError:
             pass  # Invalid input, ignore filter
     
     if min_remainder_days:
         try:
             min_remainder_days_val = int(min_remainder_days)
-            products = products.filter(remainder_days__gte=min_remainder_days_val)
+            # When min is specified, only include products with valid values >= min
+            # Exclude N/A products (remainder_days = 999)
+            products = products.filter(
+                remainder_days__gte=min_remainder_days_val,
+                remainder_days__lt=999  # Exclude N/A cases
+            )
         except ValueError:
             pass  # Invalid input, ignore filter
     
     if max_remainder_days:
         try:
             max_remainder_days_val = int(max_remainder_days)
-            products = products.filter(remainder_days__lte=max_remainder_days_val)
+            # When max is specified, include products <= max OR N/A cases
+            products = products.filter(
+                Q(remainder_days__lte=max_remainder_days_val) |
+                Q(remainder_days=999)  # Include N/A cases
+            )
         except ValueError:
             pass  # Invalid input, ignore filter
     
