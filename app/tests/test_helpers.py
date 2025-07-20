@@ -717,15 +717,15 @@ class GetRemainderDaysTestCase(TestCase):
         
         self.create_metrics_with_pattern(sales_pattern, stock_pattern)
         
-        # Should return 0 when demand is 0
+        # Should return None when demand is 0
         remainder = self.product.get_remainder_days(days_back=10)
-        self.assertEqual(remainder, 0)
+        self.assertIsNone(remainder)
     
     def test_get_remainder_days_no_metrics(self):
         """Test remainder days when product has no metrics"""
-        # Should return 0 when no metrics exist
+        # Should return None when no metrics exist
         remainder = self.product.get_remainder_days(days_back=10)
-        self.assertEqual(remainder, 0)
+        self.assertIsNone(remainder)
     
     def test_get_remainder_days_null_potential_sales(self):
         """Test remainder days when potential_sales are NULL"""
@@ -739,9 +739,18 @@ class GetRemainderDaysTestCase(TestCase):
                 potential_sales=None  # NULL potential sales
             )
         
-        # Should return 0 when all potential_sales are NULL
+        # Should return None when all potential_sales are NULL
         remainder = self.product.get_remainder_days(days_back=10)
-        self.assertEqual(remainder, 0)
+        self.assertIsNone(remainder)
+    
+    def test_get_remainder_days_none_current_stock(self):
+        """Test remainder days when current stock is None (no metrics)"""
+        # Create historical metrics but no current stock data
+        # This simulates when get_current_stock() returns None
+        
+        # Don't create any metrics - this will make get_current_stock() return None
+        remainder = self.product.get_remainder_days(days_back=10)
+        self.assertIsNone(remainder)
     
     def test_get_remainder_days_mixed_null_values(self):
         """Test remainder days with some NULL potential_sales values"""
@@ -872,9 +881,9 @@ class GetCurrentStockTestCase(TestCase):
     
     def test_get_current_stock_no_metrics(self):
         """Test get_current_stock when product has no metrics"""
-        # Should return 0 when no metrics exist
+        # Should return None when no metrics exist
         current_stock = self.product.get_current_stock()
-        self.assertEqual(current_stock, 0)
+        self.assertIsNone(current_stock)
     
     def test_get_current_stock_null_stock(self):
         """Test get_current_stock when latest metric has NULL stock"""
@@ -889,9 +898,9 @@ class GetCurrentStockTestCase(TestCase):
             potential_sales=2.0
         )
         
-        # Should return 0 when stock is NULL
+        # Should return None when stock is NULL
         current_stock = self.product.get_current_stock()
-        self.assertEqual(current_stock, 0)
+        self.assertIsNone(current_stock)
     
     def test_get_current_stock_zero_stock(self):
         """Test get_current_stock when latest metric has zero stock"""
@@ -906,7 +915,7 @@ class GetCurrentStockTestCase(TestCase):
             potential_sales=2.0
         )
         
-        # Should return 0 when stock is 0
+        # Should return 0 when stock is actually 0 (not None)
         current_stock = self.product.get_current_stock()
         self.assertEqual(current_stock, 0)
     

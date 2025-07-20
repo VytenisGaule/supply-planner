@@ -24,17 +24,53 @@ def apply_relation_filter(queryset: QuerySet, filter_list: list, field_name: str
     return filtered_queryset.distinct()
 
 
+def apply_min_max_filter(queryset: QuerySet, field_name: str, min_value: str, max_value: str, value_type: type = int) -> QuerySet:
+    """    Apply min/max filtering to a queryset field with proper None handling    """
+    # Apply min filter
+    if min_value:
+        try:
+            min_val = value_type(min_value)
+            # Only include products with valid values >= min (exclude None)
+            queryset = queryset.filter(**{f'{field_name}__gte': min_val})
+        except ValueError:
+            pass  # Invalid input, ignore filter
+    
+    # Apply max filter
+    if max_value:
+        try:
+            max_val = value_type(max_value)
+            # Include products with values <= max OR None (N/A)
+            queryset = queryset.filter(
+                Q(**{f'{field_name}__lte': max_val}) | 
+                Q(**{f'{field_name}__isnull': True})
+            )
+        except ValueError:
+            pass  # Invalid input, ignore filter
+    
+    return queryset
+
+
 def populate_product_list_context(request, context):
     """
     Context filler for product list data with pagination
     """
+    items_per_page: int = request.session.get('items_per_page', 20)
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
+
+    items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
+    code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
+    name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
+    category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data)
+    supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data)
+    code_filter_form.is_valid()
+    name_filter_form.is_valid()
+    category_filter_form.is_valid()
+    supplier_filter_form.is_valid()
+    
     code_filter: str = filter_data.get('code', '')
     name_filter: str = filter_data.get('name', '')
     category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
     supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
-    
-    # Min/max filters
     min_stock: str = filter_data.get('min_stock', '')
     max_stock: str = filter_data.get('max_stock', '')
     min_daily_demand: str = filter_data.get('min_daily_demand', '')
@@ -86,78 +122,15 @@ def populate_product_list_context(request, context):
     
     if supplier_filter:
         products = apply_relation_filter(products, supplier_filter, 'suppliers')
+
+    if min_stock or max_stock:
+        products = apply_min_max_filter(products, 'current_stock', min_stock, max_stock, int)
     
-    # Apply min/max filters on annotated fields
-    if min_stock:
-        try:
-            min_stock_val = int(min_stock)
-            # Only include products with valid stock >= min (exclude None)
-            products = products.filter(current_stock__gte=min_stock_val)
-        except ValueError:
-            pass  # Invalid input, ignore filter
-    
-    if max_stock:
-        try:
-            max_stock_val = int(max_stock)
-            # Include products with stock <= max OR None (N/A)
-            products = products.filter(
-                Q(current_stock__lte=max_stock_val) | 
-                Q(current_stock__isnull=True)
-            )
-        except ValueError:
-            pass  # Invalid input, ignore filter
-    
-    if min_daily_demand:
-        try:
-            min_daily_demand_val = float(min_daily_demand)
-            # When min is specified, only include products with valid values >= min
-            # Exclude NULL/N/A products
-            products = products.filter(avg_daily_demand__gte=min_daily_demand_val)
-        except ValueError:
-            pass  # Invalid input, ignore filter
-    
-    if max_daily_demand:
-        try:
-            max_daily_demand_val = float(max_daily_demand)
-            # When max is specified, include products <= max OR NULL/N/A
-            products = products.filter(
-                Q(avg_daily_demand__lte=max_daily_demand_val) | 
-                Q(avg_daily_demand__isnull=True)
-            )
-        except ValueError:
-            pass  # Invalid input, ignore filter
-    
-    if min_remainder_days:
-        try:
-            min_remainder_days_val = int(min_remainder_days)
-            # When min is specified, only include products with valid values >= min
-            # Exclude None/N/A products
-            products = products.filter(remainder_days__gte=min_remainder_days_val)
-        except ValueError:
-            pass  # Invalid input, ignore filter
-    
-    if max_remainder_days:
-        try:
-            max_remainder_days_val = int(max_remainder_days)
-            # When max is specified, include products <= max OR None/N/A cases
-            products = products.filter(
-                Q(remainder_days__lte=max_remainder_days_val) |
-                Q(remainder_days__isnull=True)  # Include N/A cases
-            )
-        except ValueError:
-            pass  # Invalid input, ignore filter
-    
-    items_per_page: int = request.session.get('items_per_page', 20)
-    
-    items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
-    code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
-    name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
-    category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data)
-    supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data)
-    code_filter_form.is_valid()
-    name_filter_form.is_valid()
-    category_filter_form.is_valid()
-    supplier_filter_form.is_valid()
+    if min_daily_demand or max_daily_demand:
+        products = apply_min_max_filter(products, 'avg_daily_demand', min_daily_demand, max_daily_demand, float)
+
+    if min_remainder_days or max_remainder_days:
+        products = apply_min_max_filter(products, 'remainder_days', min_remainder_days, max_remainder_days, int)
 
     # Pagination
     paginator: Paginator = Paginator(products, items_per_page)
