@@ -191,19 +191,40 @@ class Product(models.Model):
         
         return float(avg_sales) if avg_sales is not None else None
     
-    def get_remainder_days(self, days_back: int = 365) -> int:
+    def get_remainder_days(self, days_back: int = 365) -> Optional[int]:
         """Calculate average remaining days of stock based on average daily demand"""
         avg_daily_demand: Optional[float] = self.get_average_daily_demand(days_back)
-        if avg_daily_demand is None or avg_daily_demand <= 0:
-            return 0
-        latest_stock: int = self.get_current_stock()
+        
+        # If no average daily demand data, return None (N/A)
+        if avg_daily_demand is None:
+            return None
+            
+        # If average daily demand is 0, return None (can't divide by 0)
+        if avg_daily_demand <= 0:
+            return None
+            
+        latest_stock: Optional[int] = self.get_current_stock()
+        
+        # If no current stock data, return None (N/A)
+        if latest_stock is None:
+            return None
+            
+        # Calculate remainder days (can be 0 if stock is 0)
         return int(latest_stock / avg_daily_demand)
     
-    def get_current_stock(self) -> int:
+    def get_current_stock(self) -> Optional[int]:
         """Get current stock level from the latest daily metrics"""
         latest_metric: DailyMetrics = self.daily_metrics.order_by('-date').first()
-        if not latest_metric or not latest_metric.stock:
-            return 0
+        
+        # If no daily metrics exist, return None (N/A)
+        if not latest_metric:
+            return None
+            
+        # If stock field is None, return None (N/A)
+        if latest_metric.stock is None:
+            return None
+            
+        # Return actual stock value (can be 0)
         return latest_metric.stock
 
 class DailyMetrics(models.Model):

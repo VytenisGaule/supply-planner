@@ -66,18 +66,22 @@
                         {% endfor %}
                     </td>
                     <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200 text-right">
-                        {{ product.get_current_stock }}
+                        {% if product.current_stock is not None %}
+                        {{ product.current_stock }}
+                        {% else %}
+                        -
+                        {% endif %}
                     </td>
                     <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200 text-right">
-                        {% if product.get_average_daily_demand %}
-                        {{ product.get_average_daily_demand|floatformat:2 }}
+                        {% if product.avg_daily_demand is not None %}
+                        {{ product.avg_daily_demand|floatformat:2 }}
                         {% else %}
                         -
                         {% endif %}
                     </td>
                     <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 text-right">
-                        {% if product.get_remainder_days %}
-                        {{ product.get_remainder_days }}
+                        {% if product.remainder_days is not None %}
+                        {{ product.remainder_days }}
                         {% else %}
                         -
                         {% endif %}

@@ -65,8 +65,11 @@ def populate_product_list_context(request, context):
         ),
         # Remainder days calculation: current_stock / avg_daily_demand
         remainder_days=Case(
-            When(avg_daily_demand__gt=0, then=F('current_stock') / F('avg_daily_demand')),
-            default=999,
+            When(
+                Q(avg_daily_demand__gt=0) & Q(current_stock__isnull=False), 
+                then=F('current_stock') / F('avg_daily_demand')
+            ),
+            default=None,  # Return None for N/A cases instead of 999
             output_field=IntegerField()
         )
     ).all()
@@ -88,6 +91,7 @@ def populate_product_list_context(request, context):
     if min_stock:
         try:
             min_stock_val = int(min_stock)
+            # Only include products with valid stock >= min (exclude None)
             products = products.filter(current_stock__gte=min_stock_val)
         except ValueError:
             pass  # Invalid input, ignore filter
@@ -95,7 +99,11 @@ def populate_product_list_context(request, context):
     if max_stock:
         try:
             max_stock_val = int(max_stock)
-            products = products.filter(current_stock__lte=max_stock_val)
+            # Include products with stock <= max OR None (N/A)
+            products = products.filter(
+                Q(current_stock__lte=max_stock_val) | 
+                Q(current_stock__isnull=True)
+            )
         except ValueError:
             pass  # Invalid input, ignore filter
     
@@ -123,21 +131,18 @@ def populate_product_list_context(request, context):
         try:
             min_remainder_days_val = int(min_remainder_days)
             # When min is specified, only include products with valid values >= min
-            # Exclude N/A products (remainder_days = 999)
-            products = products.filter(
-                remainder_days__gte=min_remainder_days_val,
-                remainder_days__lt=999  # Exclude N/A cases
-            )
+            # Exclude None/N/A products
+            products = products.filter(remainder_days__gte=min_remainder_days_val)
         except ValueError:
             pass  # Invalid input, ignore filter
     
     if max_remainder_days:
         try:
             max_remainder_days_val = int(max_remainder_days)
-            # When max is specified, include products <= max OR N/A cases
+            # When max is specified, include products <= max OR None/N/A cases
             products = products.filter(
                 Q(remainder_days__lte=max_remainder_days_val) |
-                Q(remainder_days=999)  # Include N/A cases
+                Q(remainder_days__isnull=True)  # Include N/A cases
             )
         except ValueError:
             pass  # Invalid input, ignore filter
