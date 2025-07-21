@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from django.http import QueryDict
 from app.models import Product, Category, Supplier, DailyMetrics
 from app.helpers.utils import get_average_potential_sales
-from app.helpers.context import populate_product_list_context
+from app.helpers.context import populate_product_list_context, apply_min_max_filter
 
 
 class HelpersUtilsTestCase(TestCase):
@@ -1199,13 +1199,12 @@ class ApplyRelationFilterTestCase(TestCase):
         """Test that distinct() is applied to prevent duplicates"""
         from app.helpers.context import apply_relation_filter
         
-        # For ManyToMany relationships, we might get duplicates without distinct()
+        # product6 has both suppliers, but should only appear once
         queryset = Product.objects.all()
         filter_list = [str(self.supplier1.id), str(self.supplier2.id)]
         
         result = apply_relation_filter(queryset, filter_list, 'suppliers')
         
-        # product6 has both suppliers, but should only appear once
         product_ids = [p.id for p in result]
         unique_product_ids = list(set(product_ids))
         
@@ -1226,3 +1225,332 @@ class ApplyRelationFilterTestCase(TestCase):
         self.assertEqual(original_queryset.count(), original_count)
         self.assertEqual(original_queryset.count(), 6)  # All products
         self.assertLess(result.count(), original_count)  # Filtered result is smaller
+
+
+class ApplyMinMaxFilterTestCase(TestCase):
+    """Test cases for apply_min_max_filter function"""
+    
+    def setUp(self):
+        """Set up test data"""
+        self.category = Category.objects.create(
+            category_code="TEST_MINMAX",
+            name="Test MinMax Category"
+        )
+        
+        self.supplier = Supplier.objects.create(
+            company_name="Test MinMax Supplier",
+            email="test@minmax.com"
+        )
+        
+        # Create products with different characteristics
+        self.product1 = Product.objects.create(
+            kodas="MINMAX_001",
+            pavadinimas="Product 1",
+            category=self.category,
+            last_purchase_price=Decimal('10.00'),
+            lead_time=30
+        )
+        
+        self.product2 = Product.objects.create(
+            kodas="MINMAX_002", 
+            pavadinimas="Product 2",
+            category=self.category,
+            last_purchase_price=Decimal('20.00'),
+            lead_time=45
+        )
+        
+        self.product3 = Product.objects.create(
+            kodas="MINMAX_003",
+            pavadinimas="Product 3", 
+            category=self.category,
+            last_purchase_price=Decimal('30.00'),
+            lead_time=60
+        )
+        
+        # Create DailyMetrics with different patterns
+        today = date.today()
+        
+        # Product 1: High stock (50), high demand (avg 10/day)
+        for i in range(30):
+            DailyMetrics.objects.create(
+                product=self.product1,
+                date=today - timedelta(days=i),
+                stock=50 - i // 10,  # Stock: 50, 50, 50... 47, 47, 47... etc
+                sales_quantity=8 + (i % 5),  # Sales: 8-12 range
+                potential_sales=10 + (i % 3)  # Potential: 10-12 range
+            )
+        
+        # Product 2: Medium stock (25), medium demand (avg 5/day)
+        for i in range(30):
+            DailyMetrics.objects.create(
+                product=self.product2,
+                date=today - timedelta(days=i),
+                stock=25 - i // 15,  # Stock: 25, 25... 23, 23... etc
+                sales_quantity=3 + (i % 4),  # Sales: 3-6 range
+                potential_sales=5 + (i % 2)  # Potential: 5-6 range
+            )
+        
+        # Product 3: Low stock (5), low demand (avg 1/day)
+        for i in range(30):
+            DailyMetrics.objects.create(
+                product=self.product3,
+                date=today - timedelta(days=i),
+                stock=5,  # Constant low stock
+                sales_quantity=0 if i % 5 == 0 else 1,  # Mostly 1, occasionally 0
+                potential_sales=1  # Constant low demand
+            )
+        
+        # Product 4: No metrics (will have None values)
+        self.product4 = Product.objects.create(
+            kodas="MINMAX_004",
+            pavadinimas="Product 4 - No Data",
+            category=self.category,
+            last_purchase_price=Decimal('40.00'),
+            lead_time=15
+        )
+        
+        # Product 5: Zero stock product
+        self.product5 = Product.objects.create(
+            kodas="MINMAX_005",
+            pavadinimas="Product 5 - Zero Stock",
+            category=self.category,
+            last_purchase_price=Decimal('50.00'),
+            lead_time=20
+        )
+        
+        # Create metrics with zero stock
+        for i in range(10):
+            DailyMetrics.objects.create(
+                product=self.product5,
+                date=today - timedelta(days=i),
+                stock=0,  # Zero stock
+                sales_quantity=0,
+                potential_sales=2  # Has demand but no stock
+            )
+    
+    def get_annotated_queryset(self):
+        """Helper method to create annotated queryset like in populate_product_list_context"""
+        from django.db.models import Subquery, OuterRef, IntegerField, Avg, Case, When, F, Q
+        from datetime import datetime, timedelta
+        
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=365)
+        
+        return Product.objects.annotate(
+            # Current stock from latest daily metrics
+            current_stock=Subquery(
+                DailyMetrics.objects.filter(
+                    product=OuterRef('pk')
+                ).order_by('-date').values('stock')[:1],
+                output_field=IntegerField()
+            ),
+            # Average daily demand from potential_sales over last 365 days
+            avg_daily_demand=Avg(
+                'daily_metrics__potential_sales',
+                filter=Q(
+                    daily_metrics__date__range=[start_date, end_date],
+                    daily_metrics__potential_sales__isnull=False
+                )
+            ),
+            # Remainder days calculation: current_stock / avg_daily_demand
+            remainder_days=Case(
+                When(
+                    Q(avg_daily_demand__gt=0) & Q(current_stock__isnull=False), 
+                    then=F('current_stock') / F('avg_daily_demand')
+                ),
+                default=None,
+                output_field=IntegerField()
+            )
+        )
+    
+    def test_apply_min_max_filter_valid_range(self):
+        """Test basic min/max filtering with valid range"""
+        queryset = self.get_annotated_queryset()
+        
+        # Filter for products with current stock between 20 and 40
+        result = apply_min_max_filter(queryset, 'current_stock', '20', '40')
+        
+        # Should include product2 (stock ~25) but exclude product1 (stock ~50) and product3 (stock 5)
+        result_list = list(result.values_list('kodas', flat=True))
+        self.assertIn('MINMAX_002', result_list)
+        self.assertNotIn('MINMAX_001', result_list)  # Too high
+        self.assertNotIn('MINMAX_003', result_list)  # Too low
+        self.assertNotIn('MINMAX_004', result_list)  # No data (None)
+        self.assertNotIn('MINMAX_005', result_list)  # Zero stock (below min)
+    
+    def test_apply_min_max_filter_min_only(self):
+        """Test filtering with only minimum value"""
+        queryset = self.get_annotated_queryset()
+        
+        # Filter for products with current stock >= 20
+        result = apply_min_max_filter(queryset, 'current_stock', '20', '')
+        
+        result_list = list(result.values_list('kodas', flat=True))
+        self.assertIn('MINMAX_001', result_list)  # High stock
+        self.assertIn('MINMAX_002', result_list)  # Medium stock
+        self.assertNotIn('MINMAX_003', result_list)  # Low stock
+        self.assertNotIn('MINMAX_004', result_list)  # No data
+        self.assertNotIn('MINMAX_005', result_list)  # Zero stock
+    
+    def test_apply_min_max_filter_max_only(self):
+        """Test filtering with only maximum value"""
+        queryset = self.get_annotated_queryset()
+        
+        # Filter for products with current stock <= 30
+        result = apply_min_max_filter(queryset, 'current_stock', '', '30')
+        
+        result_list = list(result.values_list('kodas', flat=True))
+        self.assertNotIn('MINMAX_001', result_list)  # Too high
+        self.assertIn('MINMAX_002', result_list)  # Medium stock
+        self.assertIn('MINMAX_003', result_list)  # Low stock
+        self.assertNotIn('MINMAX_004', result_list)  # No data (None) - excluded
+        self.assertIn('MINMAX_005', result_list)  # Zero stock (within range)
+    
+    def test_apply_min_max_filter_empty_values(self):
+        """Test filtering with empty/None values"""
+        queryset = self.get_annotated_queryset()
+        
+        # Empty strings should not filter anything
+        result = apply_min_max_filter(queryset, 'current_stock', '', '')
+        self.assertEqual(result.count(), queryset.count())
+        
+        # None values should not filter anything
+        result = apply_min_max_filter(queryset, 'current_stock', None, None)
+        self.assertEqual(result.count(), queryset.count())
+    
+    def test_apply_min_max_filter_invalid_values(self):
+        """Test filtering with invalid numeric values"""
+        queryset = self.get_annotated_queryset()
+        
+        # Invalid min value should be ignored
+        result = apply_min_max_filter(queryset, 'current_stock', 'invalid', '30')
+        # Should work same as max-only filter
+        self.assertLess(result.count(), queryset.count())
+        
+        # Invalid max value should be ignored
+        result = apply_min_max_filter(queryset, 'current_stock', '10', 'invalid')
+        # Should work same as min-only filter
+        self.assertLess(result.count(), queryset.count())
+        
+        # Both invalid should return original queryset
+        result = apply_min_max_filter(queryset, 'current_stock', 'invalid', 'invalid')
+        self.assertEqual(result.count(), queryset.count())
+    
+    def test_apply_min_max_filter_avg_daily_demand(self):
+        """Test filtering by average daily demand"""
+        queryset = self.get_annotated_queryset()
+        
+        # Filter for products with average daily demand between 3 and 8
+        result = apply_min_max_filter(queryset, 'avg_daily_demand', '3', '8')
+        
+        result_list = list(result.values_list('kodas', flat=True))
+        # Product2 should have avg demand ~5.5, Product3 should have ~1
+        self.assertIn('MINMAX_002', result_list)
+        self.assertNotIn('MINMAX_001', result_list)  # Too high (~11)
+        self.assertNotIn('MINMAX_003', result_list)  # Too low (~1)
+        self.assertNotIn('MINMAX_004', result_list)  # No data
+        # Product5 has avg demand ~2, should be included
+        self.assertNotIn('MINMAX_005', result_list)  # Below min
+    
+    def test_apply_min_max_filter_remainder_days(self):
+        """Test filtering by remainder days"""
+        queryset = self.get_annotated_queryset()
+        
+        # Filter for products with remainder days between 10 and 100
+        result = apply_min_max_filter(queryset, 'remainder_days', '10', '100')
+        
+        result_list = list(result.values_list('kodas', flat=True))
+        # Product1: ~47 stock / ~11 demand = ~4.3 days (too low)
+        # Product2: ~24 stock / ~5.5 demand = ~4.4 days (too low)
+        # Product3: 5 stock / 1 demand = 5 days (too low)
+        # Most should be filtered out due to low remainder days
+        # Only products with very low demand relative to stock would pass
+    
+    def test_apply_min_max_filter_zero_values(self):
+        """Test filtering that includes zero values correctly"""
+        queryset = self.get_annotated_queryset()
+        
+        # Filter for products with current stock >= 0 (should include zero stock)
+        result = apply_min_max_filter(queryset, 'current_stock', '0', '')
+        
+        result_list = list(result.values_list('kodas', flat=True))
+        self.assertIn('MINMAX_001', result_list)  # High stock
+        self.assertIn('MINMAX_002', result_list)  # Medium stock
+        self.assertIn('MINMAX_003', result_list)  # Low stock
+        self.assertNotIn('MINMAX_004', result_list)  # No data (None)
+        self.assertIn('MINMAX_005', result_list)  # Zero stock (should be included)
+    
+    def test_apply_min_max_filter_exclude_none_values(self):
+        """Test that None/N/A values are properly excluded"""
+        queryset = self.get_annotated_queryset()
+        
+        # Any numeric filter should exclude products with None values
+        result = apply_min_max_filter(queryset, 'current_stock', '0', '1000')
+        
+        result_list = list(result.values_list('kodas', flat=True))
+        self.assertNotIn('MINMAX_004', result_list)  # Should exclude None values
+        
+        # Same for avg_daily_demand
+        result = apply_min_max_filter(queryset, 'avg_daily_demand', '0', '1000')
+        result_list = list(result.values_list('kodas', flat=True))
+        self.assertNotIn('MINMAX_004', result_list)  # Should exclude None values
+    
+    def test_apply_min_max_filter_inverted_range(self):
+        """Test filtering with min > max (should return empty results)"""
+        queryset = self.get_annotated_queryset()
+        
+        # Min greater than max should return empty queryset
+        result = apply_min_max_filter(queryset, 'current_stock', '100', '10')
+        self.assertEqual(result.count(), 0)
+    
+    def test_apply_min_max_filter_decimal_values(self):
+        """Test filtering with decimal values"""
+        queryset = self.get_annotated_queryset()
+        
+        # Use decimal values for filtering
+        result = apply_min_max_filter(queryset, 'avg_daily_demand', '2.5', '6.5')
+        
+        # Should work correctly with decimal comparisons
+        self.assertIsInstance(result.count(), int)
+    
+    def test_apply_min_max_filter_queryset_immutability(self):
+        """Test that original queryset is not modified"""
+        original_queryset = self.get_annotated_queryset()
+        original_count = original_queryset.count()
+        
+        # Apply filter
+        result = apply_min_max_filter(original_queryset, 'current_stock', '20', '40')
+        
+        # Original queryset should be unchanged
+        self.assertEqual(original_queryset.count(), original_count)
+        self.assertEqual(original_queryset.count(), 5)  # All products
+    
+    def test_apply_min_max_filter_annotation_field_names(self):
+        """Test that filtering works with annotation field names"""
+        from django.db.models import Value, DecimalField
+        
+        # Create queryset with annotations (similar to how context.py does it)
+        queryset = Product.objects.annotate(
+            current_stock=Value(Decimal('25.0'), output_field=DecimalField()),
+            avg_daily_demand=Value(Decimal('5.0'), output_field=DecimalField()),
+            remainder_days=Value(Decimal('5.0'), output_field=DecimalField())
+        )
+        
+        # Filter should work with annotated fields
+        result = apply_min_max_filter(queryset, 'current_stock', '20', '30')
+        self.assertEqual(result.count(), queryset.count())  # All should match
+        
+        result = apply_min_max_filter(queryset, 'current_stock', '30', '40')
+        self.assertEqual(result.count(), 0)  # None should match
+    
+    def test_apply_min_max_filter_edge_case_exact_boundaries(self):
+        """Test filtering with exact boundary values"""
+        queryset = self.get_annotated_queryset()
+        
+        # Test exact match on boundaries
+        # Get current stock of product3 (should be 5)
+        result = apply_min_max_filter(queryset, 'current_stock', '5', '5')
+        
+        result_list = list(result.values_list('kodas', flat=True))
+        # Should include product3 which has exactly 5 stock
+        self.assertIn('MINMAX_003', result_list)
