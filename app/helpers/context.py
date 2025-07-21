@@ -2,7 +2,7 @@ from django.core.paginator import Paginator
 from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField, FloatField, Case, When, F
 from django.http import QueryDict
 from app.models import Product, DailyMetrics
-from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm
+from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm
 from datetime import datetime, timedelta
 
 
@@ -59,10 +59,16 @@ def populate_product_list_context(request, context):
     name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
     category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data)
     supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data)
+    stock_filter_form: ProductStockFilterForm = ProductStockFilterForm(data=filter_data)
+    daily_demand_filter_form: ProductDailyDemandFilterForm = ProductDailyDemandFilterForm(data=filter_data)
+    remainder_days_filter_form: ProductRemainderDaysFilterForm = ProductRemainderDaysFilterForm(data=filter_data)
     code_filter_form.is_valid()
     name_filter_form.is_valid()
     category_filter_form.is_valid()
     supplier_filter_form.is_valid()
+    stock_filter_form.is_valid()
+    daily_demand_filter_form.is_valid()
+    remainder_days_filter_form.is_valid()
     
     code_filter: str = filter_data.get('code', '')
     name_filter: str = filter_data.get('name', '')
@@ -143,9 +149,11 @@ def populate_product_list_context(request, context):
     context['name_filter_form'] = name_filter_form
     context['category_filter_form'] = category_filter_form
     context['supplier_filter_form'] = supplier_filter_form
+    context['stock_filter_form'] = stock_filter_form
+    context['daily_demand_filter_form'] = daily_demand_filter_form
+    context['remainder_days_filter_form'] = remainder_days_filter_form
     
     # Add selected values for JavaScript
     context['selected_categories'] = category_filter
     context['selected_suppliers'] = supplier_filter
-
 

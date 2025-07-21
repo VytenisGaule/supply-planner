@@ -3,8 +3,14 @@
              code: '{{ code_filter_form.code.value|default:'' }}', 
              name: '{{ name_filter_form.name.value|default:'' }}', 
              categories: '', 
-             suppliers: '' 
-         } 
+             suppliers: '' ,
+             min_stock: '{{ stock_filter_form.min_stock.value|default:'' }}', 
+             max_stock: '{{ stock_filter_form.max_stock.value|default:'' }}',
+             min_daily_demand: '{{ daily_demand_filter_form.min_daily_demand.value|default:'' }}', 
+             max_daily_demand: '{{ daily_demand_filter_form.max_daily_demand.value|default:'' }}',
+             min_remainder_days: '{{ remainder_days_filter_form.min_remainder_days.value|default:'' }}', 
+             max_remainder_days: '{{ remainder_days_filter_form.max_remainder_days.value|default:'' }}'
+         }
      }">
 
     <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">

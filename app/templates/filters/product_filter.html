@@ -33,29 +33,23 @@
     </th>
     <th class="p-1 border-r border-gray-200">
         <div class="flex gap-1">
-            <input type="text" name="min_stock" placeholder="Min"
-                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            {{ stock_filter_form.min_stock }}
             <span class="text-xs text-gray-400 self-center">-</span>
-            <input type="text" name="max_stock" placeholder="Max"
-                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            {{ stock_filter_form.max_stock }}
         </div>
     </th>
     <th class="p-1 border-r border-gray-200">
         <div class="flex gap-1">
-            <input type="text" name="min_daily_demand" placeholder="Min"
-                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            {{ daily_demand_filter_form.min_daily_demand }}
             <span class="text-xs text-gray-400 self-center">-</span>
-            <input type="text" name="max_daily_demand" placeholder="Max"
-                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            {{ daily_demand_filter_form.max_daily_demand }}
         </div>
     </th>
     <th class="p-1">
         <div class="flex gap-1">
-            <input type="text" name="min_remainder_days" placeholder="Min"
-                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            {{ remainder_days_filter_form.min_remainder_days }}
             <span class="text-xs text-gray-400 self-center">-</span>
-            <input type="text" name="max_remainder_days" placeholder="Max"
-                class="filter-input p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+            {{ remainder_days_filter_form.max_remainder_days }}
         </div>
     </th>
 </tr>
