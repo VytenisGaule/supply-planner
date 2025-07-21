@@ -988,7 +988,7 @@ class GetCurrentStockTestCase(TestCase):
         self.assertEqual(current_stock, 50)
         
         # Test that remainder_days uses this stock value correctly
-        # Average demand = 5, current stock = 50, so 50/5 = 10 days
+        # Average demand = 5, current stock = 50, so 50/5 = 10
         remainder = self.product.get_remainder_days(days_back=5)
         self.assertEqual(remainder, 10)
 
@@ -1393,17 +1393,17 @@ class ApplyMinMaxFilterTestCase(TestCase):
         self.assertNotIn('MINMAX_005', result_list)  # Zero stock
     
     def test_apply_min_max_filter_max_only(self):
-        """Test filtering with only maximum value"""
+        """Test filtering with only maximum value (should include None values)"""
         queryset = self.get_annotated_queryset()
         
-        # Filter for products with current stock <= 30
+        # Filter for products with current stock <= 30, should include None values
         result = apply_min_max_filter(queryset, 'current_stock', '', '30')
-        
         result_list = list(result.values_list('kodas', flat=True))
+        # Should include product2 (medium stock), product3 (low stock), product5 (zero stock), and product4 (None)
         self.assertNotIn('MINMAX_001', result_list)  # Too high
         self.assertIn('MINMAX_002', result_list)  # Medium stock
         self.assertIn('MINMAX_003', result_list)  # Low stock
-        self.assertNotIn('MINMAX_004', result_list)  # No data (None) - excluded
+        self.assertIn('MINMAX_004', result_list)  # No data (None) - now included
         self.assertIn('MINMAX_005', result_list)  # Zero stock (within range)
     
     def test_apply_min_max_filter_empty_values(self):

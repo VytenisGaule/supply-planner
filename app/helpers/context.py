@@ -40,7 +40,7 @@ def apply_min_max_filter(queryset: QuerySet, field_name: str, min_value: str, ma
         try:
             max_val = value_type(max_value)
             # Only include products with valid values <= max (exclude None)
-            queryset = queryset.filter(**{f'{field_name}__lte': max_val})
+            queryset = queryset.filter(Q(**{f'{field_name}__lte': max_val}) | Q(**{f'{field_name}__isnull': True}))
         except ValueError:
             pass  # Invalid input, ignore filter
     
