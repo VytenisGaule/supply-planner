@@ -135,9 +135,11 @@ class Product(models.Model):
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     last_purchase_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True, help_text="Last purchase price")
     currency = models.CharField(max_length=10, default='USD', choices=CURRENCY_CHOICES)
+    is_internet = models.BooleanField(default=False, help_text="Is e-shop")
     # fields entered or calculated
     lead_time = models.PositiveIntegerField(default=120, help_text="Lead time in days including transportation and customs clearance")
-    
+    is_live = models.BooleanField(default=False, help_text="Is active product") #todo: set to is_internet if imported first time, else pass
+
     class Meta:
         """Meta class for Product model"""
         ordering = ['kodas']

@@ -6,7 +6,7 @@
         {
             "label": "Install Dependencies",
             "type": "shell",
-            "command": "pip",
+            "command": "./virtualEnvironment/bin/pip",
             "args": [
                 "install",
                 "-r",
@@ -24,7 +24,7 @@
         {
             "label": "Django: Migrate",
             "type": "shell",
-            "command": "python",
+            "command": "./virtualEnvironment/bin/python",
             "args": [
                 "manage.py",
                 "migrate"
@@ -42,7 +42,7 @@
         {
             "label": "Django: Make Migrations",
             "type": "shell",
-            "command": "python",
+            "command": "./virtualEnvironment/bin/python",
             "args": [
                 "manage.py",
                 "makemigrations"
@@ -59,7 +59,7 @@
         {
             "label": "Django: Run Server",
             "type": "shell",
-            "command": "python",
+            "command": "./virtualEnvironment/bin/python",
             "args": [
                 "manage.py",
                 "runserver",
@@ -78,7 +78,7 @@
         {
             "label": "Django: Create Superuser",
             "type": "shell",
-            "command": "python",
+            "command": "./virtualEnvironment/bin/python",
             "args": [
                 "manage.py",
                 "createsuperuser"
@@ -95,7 +95,7 @@
         {
             "label": "Data: Import Daily Data",
             "type": "shell",
-            "command": "python",
+            "command": "./virtualEnvironment/bin/python",
             "args": [
                 "manage.py",
                 "import_daily_data"
@@ -141,7 +141,7 @@
         {
             "label": "Django: Collect Messages",
             "type": "shell",
-            "command": "python",
+            "command": "./virtualEnvironment/bin/python",
             "args": [
                 "manage.py",
                 "makemessages",
@@ -162,7 +162,7 @@
         {
             "label": "Django: Compile Messages",
             "type": "shell",
-            "command": "python",
+            "command": "./virtualEnvironment/bin/python",
             "args": [
                 "manage.py",
                 "compilemessages",
