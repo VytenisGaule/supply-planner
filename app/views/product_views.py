@@ -9,6 +9,7 @@ def product_list(request):
     populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
 
+@csrf_protect
 @require_POST
 def get_items_per_page(request):
     """
@@ -20,6 +21,7 @@ def get_items_per_page(request):
     populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
 
+@csrf_protect
 @require_POST
 def get_product_filter(request):
     """
