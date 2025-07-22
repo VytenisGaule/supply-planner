@@ -1,0 +1,4 @@
+<span x-data="{validationError:true}">
+    <div class="flex gap-x-2">{{ fieldString|safe }}</div>
+    <p x-show="validationError" class="pt-2 text-red-500 text-sm">{{ fieldError }}</p>
+</span>

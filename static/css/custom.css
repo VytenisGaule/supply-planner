@@ -148,3 +148,44 @@ input[type="text"].text-xs {
     border-color: #ef4444 !important;
     box-shadow: 0 0 0 1px #ef4444 !important;
 }
+
+/* Error field border for invalid input (bottom border red) */
+.field-error-border-b {
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 2px 0 0 #ef4444 !important;
+}
+
+/* Error field border for invalid input (full border red) */
+.field-error {
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 !important;
+}
+
+/* Error message styling for fieldValidationError.html */
+.field-error-message {
+    color: #ef4444;
+    font-size: 0.85em;
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+/* Optional: error icon styling */
+.field-error-icon {
+    color: #ef4444;
+    margin-right: 0.25em;
+    font-size: 1em;
+    vertical-align: middle;
+}
+
+/* Utility: text-red-500 (red text color) */
+.text-red-500 {
+    color: #ef4444 !important;
+}
+
+/* Utility: text-sm (small text size) */
+.text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+}
