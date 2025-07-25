@@ -1,5 +1,6 @@
 from django.contrib import admin
 from app.models import User, Category, Product, Supplier, DailyMetrics
+from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
 
 # Register your models here.
 
@@ -7,7 +8,11 @@ from app.models import User, Category, Product, Supplier, DailyMetrics
 class UserAdmin(admin.ModelAdmin):
     """User admin"""
     list_display = ('username', 'is_active', '_admin', 'is_superuser', 'date_joined', 'last_login')
-    list_filter = ('is_active', 'is_staff', 'is_superuser')
+    list_filter = (
+        ('is_active', DropdownFilter),
+        ('is_staff', DropdownFilter),
+        ('is_superuser', DropdownFilter),
+    )
     search_fields = ('username',)
     ordering = ['username']
     readonly_fields = ('date_joined', 'last_login')
@@ -64,10 +69,21 @@ class ProductAdmin(admin.ModelAdmin):
     """Product admin"""
     list_display = ('code', 'name', 'category', 'supplier_list', 'last_purchase_price')
     search_fields = ('code', 'name')
-    list_filter = ('category', 'suppliers')
+    list_filter = (
+        ('category', RelatedDropdownFilter),
+        ('suppliers', RelatedDropdownFilter),
+    )
     ordering = ['code']
-    readonly_fields = ('last_purchase_price', 'currency', 'supplier_list')
-    
+    readonly_fields = ('code', 'name', 'category', 'last_purchase_price', 'currency', 'supplier_list', 'is_internet')
+    fieldsets = (
+        ('ERP data', {
+            'fields': ('code', 'name', 'category', 'last_purchase_price', 'currency', 'supplier_list', 'is_internet')
+        }),
+        ('Inventory', {
+            'fields': ('is_active','lead_time', 'moq')
+        }),
+    )
+
     def supplier_list(self, obj):
         """Display comma-separated list of suppliers"""
         return obj.get_supplier_names() or "No suppliers"
@@ -80,12 +96,12 @@ class DailyMetricsAdmin(admin.ModelAdmin):
     """Daily metrics admin"""
     list_display = ('product', 'date', 'sales_quantity', 'stock')
     search_fields = ('product__code', 'product__name')
-    list_filter = ('product__category', 'product__suppliers',)
+    list_filter = (
+        ('product__category', RelatedDropdownFilter),
+        ('product__suppliers', RelatedDropdownFilter),
+    )
     ordering = ['-date']
-    readonly_fields = (
-        'potential_sales', 
-        'lost_sales',
-        )
+    readonly_fields = ('product', 'date', 'sales_quantity', 'stock', 'potential_sales', 'lost_sales',)
     
     def get_queryset(self, request):
         """Optimize queryset to include related product data"""

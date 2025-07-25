@@ -36,3 +36,4 @@ pylint-django>=2.5.0
 selenium>=4.20.0
 undetected_chromedriver>=3.0.6
 beautifulsoup4==4.12.2
+django-admin-list-filter-dropdown==1.0.3

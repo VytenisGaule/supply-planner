@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'compressor',
+    'django_admin_listfilter_dropdown',
     
     # Local apps
     'app',
