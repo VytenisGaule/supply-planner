@@ -114,7 +114,7 @@ class Supplier(models.Model):
         products: QuerySet = self.products.all()  # pylint: disable=no-member
         if not products.exists():
             return "No products"
-        return ", ".join([product.kodas for product in products])
+        return ", ".join([product.code for product in products])
         
     def __str__(self):
         return str(self.company_name) if self.company_name is not None else ""
@@ -130,31 +130,31 @@ class Product(models.Model):
     ]
     
     # fields to import from ERP
-    kodas = models.CharField(max_length=50, null=True, blank=True)
-    pavadinimas = models.CharField(max_length=400, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True)
+    name = models.CharField(max_length=400, null=True, blank=True)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     last_purchase_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True, help_text="Last purchase price")
     currency = models.CharField(max_length=10, default='USD', choices=CURRENCY_CHOICES)
     is_internet = models.BooleanField(default=False, help_text="Is e-shop")
     # fields entered or calculated
     lead_time = models.PositiveIntegerField(default=120, help_text="Lead time in days including transportation and customs clearance")
-    is_live = models.BooleanField(default=False, help_text="Is active product") #todo: set to is_internet if imported first time, else pass
+    is_active = models.BooleanField(default=False, help_text="Is active product")
 
     class Meta:
         """Meta class for Product model"""
-        ordering = ['kodas']
+        ordering = ['code']
         verbose_name = 'Product'
         verbose_name_plural = 'Products'
         constraints = [
             models.UniqueConstraint(
-                fields=['kodas'],
-                condition=models.Q(kodas__isnull=False) & ~models.Q(kodas=''),
-                name='unique_kodas_when_not_blank'
+                fields=['code'],
+                condition=models.Q(code__isnull=False) & ~models.Q(code=''),
+                name='unique_code_when_not_blank'
             )
         ]
         
     def __str__(self):
-        return f"{self.kodas} - {self.pavadinimas}"
+        return f"{self.code} - {self.name}"
     
     def get_supplier_names(self):
         """Get comma-separated list of supplier names"""
@@ -257,4 +257,4 @@ class DailyMetrics(models.Model):
         return None
     
     def __str__(self):
-        return f"{self.product.kodas} - {self.date} (Stock: {self.stock}, Sales: {self.sales_quantity})"
+        return f"{self.product.code} - {self.date} (Stock: {self.stock}, Sales: {self.sales_quantity})"

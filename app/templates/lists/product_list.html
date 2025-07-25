@@ -52,10 +52,10 @@
                 {% for product in products %}
                 <tr class="hover:bg-gray-200 cursor-pointer border-b border-gray-200">
                     <td class="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-200">
-                        {{ product.kodas }}
+                        {{ product.code }}
                     </td>
                     <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">
-                        {{ product.pavadinimas }}
+                        {{ product.name }}
                     </td>
                     <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">
                         {% if product.category %}

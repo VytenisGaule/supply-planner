@@ -62,10 +62,10 @@ class SupplierAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """Product admin"""
-    list_display = ('kodas', 'pavadinimas', 'category', 'supplier_list', 'last_purchase_price')
-    search_fields = ('kodas', 'pavadinimas')
+    list_display = ('code', 'name', 'category', 'supplier_list', 'last_purchase_price')
+    search_fields = ('code', 'name')
     list_filter = ('category', 'suppliers')
-    ordering = ['kodas']
+    ordering = ['code']
     readonly_fields = ('last_purchase_price', 'currency', 'supplier_list')
     
     def supplier_list(self, obj):
@@ -79,7 +79,7 @@ class ProductAdmin(admin.ModelAdmin):
 class DailyMetricsAdmin(admin.ModelAdmin):
     """Daily metrics admin"""
     list_display = ('product', 'date', 'sales_quantity', 'stock')
-    search_fields = ('product__kodas', 'product__pavadinimas')
+    search_fields = ('product__code', 'product__name')
     list_filter = ('product__category', 'product__suppliers',)
     ordering = ['-date']
     readonly_fields = (
