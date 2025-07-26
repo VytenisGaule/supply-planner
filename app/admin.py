@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.http import HttpRequest
 from app.models import User, Category, Product, Supplier, DailyMetrics
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
-from django.db.models import QuerySet, Exists, OuterRef
+from django.db.models import QuerySet, Exists, OuterRef, Subquery, IntegerField
 from datetime import datetime, timedelta
 
 # Register your models here.
@@ -77,7 +77,7 @@ class IsNewProductFilter(admin.SimpleListFilter):
             ('old', 'Old'),
         )
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet) -> QuerySet:
         old_metrics = DailyMetrics.objects.filter(
             product=OuterRef('pk'),
             date__lt=datetime.now().date() - timedelta(days=30)
@@ -91,16 +91,40 @@ class IsNewProductFilter(admin.SimpleListFilter):
             return queryset.filter(has_old_metrics=True).distinct()
         return queryset.distinct()
 
+class InStockProductFilter(admin.SimpleListFilter):
+    title = 'In Stock'
+    parameter_name = 'in_stock'
+
+    def lookups(self, request: HttpRequest, model_admin: admin.ModelAdmin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request: HttpRequest, queryset: QuerySet) -> QuerySet:
+        latest_stock_subquery = DailyMetrics.objects.filter(
+            product=OuterRef('pk')
+        ).order_by('-date').values('stock')[:1]
+        queryset = queryset.annotate(
+            latest_stock_value=Subquery(latest_stock_subquery, output_field=IntegerField())
+        )
+        if self.value() == 'yes':
+            return queryset.filter(latest_stock_value__gt=0).distinct()
+        if self.value() == 'no':
+            return queryset.filter(latest_stock_value__isnull=True) | queryset.filter(latest_stock_value__lte=0)
+        return queryset.distinct()
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """Product admin"""
-    list_display = ('code', 'name', 'category', 'supplier_list', 'is_internet', 'is_active', 'is_new_product_display')
+    list_display = ('code', 'name', 'category', 'supplier_list', 'has_stock_display', 'is_internet', 'is_active', 'is_new_product_display')
     search_fields = ('code', 'name')
     list_filter = (
         ('category', RelatedDropdownFilter),
         ('suppliers', RelatedDropdownFilter),
         'is_active',
         'is_internet',
+        InStockProductFilter,
         IsNewProductFilter,
     )
     ordering = ['code']
@@ -125,6 +149,11 @@ class ProductAdmin(admin.ModelAdmin):
         """Show if product is new (uses model property)"""
         return obj.is_new
 
+    def has_stock_display(self, obj: Product) -> bool:
+        """True if newest daily metric stock > 0"""
+        latest_metric = obj.daily_metrics.order_by('-date').first()
+        return bool(latest_metric and latest_metric.stock and latest_metric.stock > 0)
+
     def set_products_active(self, request: HttpRequest, queryset: QuerySet):
         updated: int = queryset.update(is_active=True)
         self.message_user(request, f"{updated} products set as active.")
@@ -135,6 +164,8 @@ class ProductAdmin(admin.ModelAdmin):
     
     is_new_product_display.boolean = True
     is_new_product_display.short_description = 'New Product'
+    has_stock_display.boolean = True
+    has_stock_display.short_description = 'In Stock'
     set_products_active.short_description = "Set selected products as active"
     set_products_inactive.short_description = "Set selected products as inactive"
 

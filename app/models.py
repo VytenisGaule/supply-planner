@@ -137,7 +137,7 @@ class Product(models.Model):
     is_internet = models.BooleanField(default=False, help_text="Is e-shop")
     # fields entered or calculated
     lead_time = models.PositiveIntegerField(default=120, help_text="Lead time in days including transportation and customs clearance")
-    is_active = models.BooleanField(default=False, help_text="Is active product")
+    is_active = models.BooleanField(default=False, help_text="Only active products are displayed and forecasted")
     moq = models.PositiveIntegerField(default=1, help_text="Retailer MOQ if applicable")
 
     class Meta:

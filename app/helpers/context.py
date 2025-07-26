@@ -111,7 +111,7 @@ def populate_product_list_context(request, context):
             default=None,  # Return None for N/A cases instead of 999
             output_field=IntegerField()
         )
-    ).all()
+    ).filter(is_active=True)
     
     # Apply filters to the queryset
     if code_filter:
