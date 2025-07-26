@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import Optional, Union
 from django.db import models
 from django.db.models import QuerySet
@@ -197,38 +196,29 @@ class Product(models.Model):
     def get_remainder_days(self, days_back: int = 365) -> Optional[int]:
         """Calculate average remaining days of stock based on average daily demand"""
         avg_daily_demand: Optional[float] = self.get_average_daily_demand(days_back)
-        
-        # If no average daily demand data, return None (N/A)
         if avg_daily_demand is None:
             return None
-            
-        # If average daily demand is 0, return None (can't divide by 0)
         if avg_daily_demand <= 0:
             return None
-            
         latest_stock: Optional[int] = self.get_current_stock()
-        
-        # If no current stock data, return None (N/A)
         if latest_stock is None:
             return None
-            
-        # Calculate remainder days (can be 0 if stock is 0)
         return int(latest_stock / avg_daily_demand)
     
     def get_current_stock(self) -> Optional[int]:
         """Get current stock level from the latest daily metrics"""
         latest_metric: DailyMetrics = self.daily_metrics.order_by('-date').first()
-        
-        # If no daily metrics exist, return None (N/A)
         if not latest_metric:
             return None
-            
-        # If stock field is None, return None (N/A)
         if latest_metric.stock is None:
             return None
-            
-        # Return actual stock value (can be 0)
         return latest_metric.stock
+    
+    @property
+    def is_new(self) -> bool:
+        """Check if this product is new (no metrics 30 days ago)"""
+        cutoff = datetime.now().date() - timedelta(days=30)
+        return not self.daily_metrics.filter(date__lt=cutoff).exists()
 
 class DailyMetrics(models.Model):
     """

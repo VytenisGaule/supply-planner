@@ -1,6 +1,9 @@
 from django.contrib import admin
+from django.http import HttpRequest
 from app.models import User, Category, Product, Supplier, DailyMetrics
 from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
+from django.db.models import QuerySet, Exists, OuterRef
+from datetime import datetime, timedelta
 
 # Register your models here.
 
@@ -64,14 +67,41 @@ class SupplierAdmin(admin.ModelAdmin):
     product_list.short_description = 'Products'
     
 
+class IsNewProductFilter(admin.SimpleListFilter):
+    title = 'New Product'
+    parameter_name = 'is_new_product'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('new', 'New'),
+            ('old', 'Old'),
+        )
+
+    def queryset(self, request, queryset):
+        old_metrics = DailyMetrics.objects.filter(
+            product=OuterRef('pk'),
+            date__lt=datetime.now().date() - timedelta(days=30)
+        )
+        queryset = queryset.annotate(
+            has_old_metrics=Exists(old_metrics)
+        )
+        if self.value() == 'new':
+            return queryset.filter(has_old_metrics=False).distinct()
+        if self.value() == 'old':
+            return queryset.filter(has_old_metrics=True).distinct()
+        return queryset.distinct()
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """Product admin"""
-    list_display = ('code', 'name', 'category', 'supplier_list', 'last_purchase_price')
+    list_display = ('code', 'name', 'category', 'supplier_list', 'is_internet', 'is_active', 'is_new_product_display')
     search_fields = ('code', 'name')
     list_filter = (
         ('category', RelatedDropdownFilter),
         ('suppliers', RelatedDropdownFilter),
+        'is_active',
+        'is_internet',
+        IsNewProductFilter,
     )
     ordering = ['code']
     readonly_fields = ('code', 'name', 'category', 'last_purchase_price', 'currency', 'supplier_list', 'is_internet')
@@ -83,6 +113,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('is_active','lead_time', 'moq')
         }),
     )
+    actions = ['set_products_active', 'set_products_inactive']
 
     def supplier_list(self, obj):
         """Display comma-separated list of suppliers"""
@@ -90,6 +121,22 @@ class ProductAdmin(admin.ModelAdmin):
     
     supplier_list.short_description = 'Suppliers'
     
+    def is_new_product_display(self, obj: Product):
+        """Show if product is new (uses model property)"""
+        return obj.is_new
+
+    def set_products_active(self, request: HttpRequest, queryset: QuerySet):
+        updated: int = queryset.update(is_active=True)
+        self.message_user(request, f"{updated} products set as active.")
+
+    def set_products_inactive(self, request: HttpRequest, queryset: QuerySet):
+        updated: int = queryset.update(is_active=False)
+        self.message_user(request, f"{updated} products set as inactive.")
+    
+    is_new_product_display.boolean = True
+    is_new_product_display.short_description = 'New Product'
+    set_products_active.short_description = "Set selected products as active"
+    set_products_inactive.short_description = "Set selected products as inactive"
 
 @admin.register(DailyMetrics)
 class DailyMetricsAdmin(admin.ModelAdmin):
