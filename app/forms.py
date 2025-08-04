@@ -139,14 +139,18 @@ class MinMaxFilterForm(forms.Form):
         )
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data: dict = super().clean()
+        normalized_data: dict = {}
         for key in list(cleaned_data):
             value = cleaned_data[key]
             if value is not None and value != '':
                 try:
-                    float(value)
+                    normalized_data[key] = str(int(float(value)))
                 except ValueError:
                     self.add_error(key, 'Enter a valid number.')
+        self.data = self.data.copy()
+        for key, v in normalized_data.items():
+            self.data[key] = v
         return cleaned_data
 
 
