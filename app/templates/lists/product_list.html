@@ -48,15 +48,15 @@
                 {% for product in products %}
                 <tr class="hover:bg-gray-200 cursor-pointer border-b border-gray-200">
                     <td
-                        class="px-1 py-0.5 whitespace-nowrap text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
                         {{ product.code }}
                     </td>
                     <td
-                        class="px-1 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[80px] max-w-[120px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[80px] max-w-[120px] truncate">
                         {{ product.name }}
                     </td>
                     <td
-                        class="px-0.5 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
                         {% if product.category %}
                         {{ product.category }}
                         {% else %}
@@ -64,7 +64,7 @@
                         {% endif %}
                     </td>
                     <td
-                        class="px-0.5 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[80px] max-w-[100px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[80px] max-w-[100px] truncate">
                         {% for supplier in product.suppliers.all %}
                         {{ supplier.company_name }}{% if not forloop.last %}, {% endif %}
                         {% empty %}
@@ -72,7 +72,7 @@
                         {% endfor %}
                     </td>
                     <td
-                        class="px-0.5 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 text-left min-w-[60px] max-w-[80px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 text-left min-w-[60px] max-w-[80px] truncate">
                         {% if product.current_stock is not None %}
                         {{ product.current_stock }}
                         {% else %}
@@ -80,7 +80,7 @@
                         {% endif %}
                     </td>
                     <td
-                        class="px-0.5 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 text-left min-w-[60px] max-w-[80px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 text-left min-w-[60px] max-w-[80px] truncate">
                         {% if product.avg_daily_demand is not None %}
                         {{ product.avg_daily_demand|floatformat:2 }}
                         {% else %}
@@ -88,7 +88,7 @@
                         {% endif %}
                     </td>
                     <td
-                        class="px-0.5 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 text-left min-w-[60px] max-w-[80px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 text-left min-w-[60px] max-w-[80px] truncate">
                         {% if product.remainder_days is not None %}
                         {{ product.remainder_days }}
                         {% else %}
@@ -96,7 +96,7 @@
                         {% endif %}
                     </td>
                     <td
-                        class="px-0.5 py-0.5 whitespace-nowrap text-xs text-gray-700 text-left min-w-[60px] max-w-[80px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 text-left min-w-[60px] max-w-[80px] truncate">
                         {% if product.po_quantity is not None %}
                         {{ product.po_quantity|floatformat:2 }}
                         {% else %}
