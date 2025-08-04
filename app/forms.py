@@ -123,7 +123,7 @@ class MinMaxFilterForm(forms.Form):
             max_length=10,
             widget=forms.TextInput(attrs={
                 'name': f'min_{field_name}',
-                'placeholder': f'Min {placeholder_prefix}',
+                'placeholder': 'Min',
                 'class': 'filter-input text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
             })
         )
@@ -133,7 +133,7 @@ class MinMaxFilterForm(forms.Form):
             max_length=10,
             widget=forms.TextInput(attrs={
                 'name': f'max_{field_name}',
-                'placeholder': f'Max {placeholder_prefix}',
+                'placeholder': 'Max',
                 'class': 'filter-input text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
             })
         )
