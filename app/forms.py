@@ -16,9 +16,28 @@ class ItemsPerPageForm(forms.Form):
         widget=forms.Select(attrs={
             'id': 'items-per-page',
             'class': 'border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'x-model': 'items_per_page'
         })
     )
+    
+class OrderDaysForm(forms.Form):
+    """Form for MOQ days input"""
+    order_days = forms.IntegerField(
+        required=False,
+        min_value=1,
+        widget=forms.TextInput(attrs={
+            'name': 'order_days',
+            'placeholder': 'Order days',
+            'class': 'border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+        })
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        order_days = cleaned_data.get('order_days')
+        if order_days is not None and order_days < 1:
+            self.add_error('order_days', 'Enter a positive number')
+        return cleaned_data
+
 
 
 class ProductCodeFilterForm(forms.Form):
@@ -29,7 +48,6 @@ class ProductCodeFilterForm(forms.Form):
         max_length=50,
         widget=forms.TextInput(attrs={
             'name': 'code',
-            'x-model': 'filters.code',
             'placeholder': 'Filter by code...',
             'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
         })
@@ -44,7 +62,6 @@ class ProductNameFilterForm(forms.Form):
         max_length=200,
         widget=forms.TextInput(attrs={
             'name': 'name',
-            'x-model': 'filters.name',
             'placeholder': 'Filter by name...',
             'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
         })
@@ -58,7 +75,6 @@ class ProductCategoryFilterForm(forms.Form):
         required=False,
         widget=forms.SelectMultiple(attrs={
             'name': 'categories',
-            'x-model': 'filters.categories',
             'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
             'data-select2': 'true',
             'data-placeholder': 'Select categories...',
@@ -81,7 +97,6 @@ class ProductSupplierFilterForm(forms.Form):
         required=False,
         widget=forms.SelectMultiple(attrs={
             'name': 'suppliers',
-            'x-model': 'filters.suppliers',
             'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
             'data-select2': 'true',
             'data-placeholder': 'Select suppliers...',
@@ -108,7 +123,6 @@ class MinMaxFilterForm(forms.Form):
             max_length=10,
             widget=forms.TextInput(attrs={
                 'name': f'min_{field_name}',
-                'x-model': f'filters.min_{field_name}',
                 'placeholder': f'Min {placeholder_prefix}',
                 'class': 'filter-input text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
             })
@@ -119,7 +133,6 @@ class MinMaxFilterForm(forms.Form):
             max_length=10,
             widget=forms.TextInput(attrs={
                 'name': f'max_{field_name}',
-                'x-model': f'filters.max_{field_name}',
                 'placeholder': f'Max {placeholder_prefix}',
                 'class': 'filter-input text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
             })

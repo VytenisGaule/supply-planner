@@ -1,19 +1,18 @@
-<div class="container mx-auto p-4" id="product-list" x-data="{ 
-         filters: { 
-             code: '{{ code_filter_form.code.value|default:'' }}', 
-             name: '{{ name_filter_form.name.value|default:'' }}', 
-             categories: '', 
-             suppliers: '' ,
-             min_stock: '{{ stock_filter_form.min_stock.value|default:'' }}', 
-             max_stock: '{{ stock_filter_form.max_stock.value|default:'' }}',
-             min_daily_demand: '{{ daily_demand_filter_form.min_daily_demand.value|default:'' }}', 
-             max_daily_demand: '{{ daily_demand_filter_form.max_daily_demand.value|default:'' }}',
-             min_remainder_days: '{{ remainder_days_filter_form.min_remainder_days.value|default:'' }}', 
-             max_remainder_days: '{{ remainder_days_filter_form.max_remainder_days.value|default:'' }}'
-         }
-     }">
-
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+<div class="container mx-auto p-4" id="product-list">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200"
+        x-data="{ 
+            filters: { 
+                code: '{{ code_filter_form.code.value|default:'' }}', 
+                name: '{{ name_filter_form.name.value|default:'' }}', 
+                categories: '', 
+                suppliers: '' ,
+                min_stock: '{{ stock_filter_form.min_stock.value|default:'' }}', 
+                max_stock: '{{ stock_filter_form.max_stock.value|default:'' }}',
+                min_daily_demand: '{{ daily_demand_filter_form.min_daily_demand.value|default:'' }}', 
+                max_daily_demand: '{{ daily_demand_filter_form.max_daily_demand.value|default:'' }}',
+                min_remainder_days: '{{ remainder_days_filter_form.min_remainder_days.value|default:'' }}', 
+                max_remainder_days: '{{ remainder_days_filter_form.max_remainder_days.value|default:'' }}'
+            }">
         <table class="w-full border-collapse">
             <thead class="bg-gray-50">
                 <tr class="border-b border-gray-200">
@@ -106,4 +105,5 @@
 
     <!-- Pagination -->
     {% include 'partials/pagination.html' with page_obj=products %}
+    {% include 'partials/orderDays.html' %}
 </div>

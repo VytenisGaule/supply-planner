@@ -23,6 +23,17 @@ def get_items_per_page(request):
 
 @csrf_protect
 @require_POST
+def get_order_days(request):
+    """
+    get order days
+    """
+    context: dict = {}
+    request.session['order_days_data'] = request.POST
+    populate_product_list_context(request, context)
+    return render(request, 'lists/product_list.html', context=context)
+
+@csrf_protect
+@require_POST
 def get_product_filter(request):
     """
     get product filter

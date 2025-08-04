@@ -2,7 +2,7 @@ from django.core.paginator import Paginator
 from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField, FloatField, Case, When, F
 from django.http import QueryDict
 from app.models import Product, DailyMetrics
-from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm
+from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm, OrderDaysForm
 from datetime import datetime, timedelta
 
 
@@ -53,8 +53,10 @@ def populate_product_list_context(request, context):
     """
     items_per_page: int = request.session.get('items_per_page', 20)
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
+    order_days_data: QueryDict = request.session.get('order_days_data', QueryDict())
 
     items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
+    order_days_form: OrderDaysForm = OrderDaysForm(data=order_days_data)
     code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
     name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
     category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data)
@@ -62,6 +64,7 @@ def populate_product_list_context(request, context):
     stock_filter_form: ProductStockFilterForm = ProductStockFilterForm(data=filter_data)
     daily_demand_filter_form: ProductDailyDemandFilterForm = ProductDailyDemandFilterForm(data=filter_data)
     remainder_days_filter_form: ProductRemainderDaysFilterForm = ProductRemainderDaysFilterForm(data=filter_data)
+    order_days_form.is_valid()
     code_filter_form.is_valid()
     name_filter_form.is_valid()
     category_filter_form.is_valid()
@@ -115,10 +118,10 @@ def populate_product_list_context(request, context):
     
     # Apply filters to the queryset
     if code_filter:
-        products = products.filter(kodas__icontains=code_filter)
+        products = products.filter(code__icontains=code_filter)
     
     if name_filter:
-        products = products.filter(pavadinimas__icontains=name_filter)
+        products = products.filter(name__icontains=name_filter)
     
     if category_filter:
         products = apply_relation_filter(products, category_filter, 'category')
@@ -144,6 +147,7 @@ def populate_product_list_context(request, context):
     context['products'] = page_obj
     context['paginator'] = paginator
     context['items_per_page'] = items_per_page
+    context['order_days_form'] = order_days_form
     context['items_per_page_form'] = items_per_page_form
     context['code_filter_form'] = code_filter_form
     context['name_filter_form'] = name_filter_form
@@ -152,8 +156,6 @@ def populate_product_list_context(request, context):
     context['stock_filter_form'] = stock_filter_form
     context['daily_demand_filter_form'] = daily_demand_filter_form
     context['remainder_days_filter_form'] = remainder_days_filter_form
-    
-    # Add selected values for JavaScript
     context['selected_categories'] = category_filter
     context['selected_suppliers'] = supplier_filter
 
