@@ -52,7 +52,7 @@
                         {{ product.code }}
                     </td>
                     <td
-                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[80px] max-w-[120px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
                         {{ product.name }}
                     </td>
                     <td
@@ -64,7 +64,7 @@
                         {% endif %}
                     </td>
                     <td
-                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[80px] max-w-[100px] truncate">
+                        class="px-2 py-0.5 whitespace-nowrap text-xs text-gray-700 border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
                         {% for supplier in product.suppliers.all %}
                         {{ supplier.company_name }}{% if not forloop.last %}, {% endif %}
                         {% empty %}
