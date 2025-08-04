@@ -139,8 +139,8 @@ input[type="text"].text-xs {
 
 /* Filter input styles */
 .filter-input {
-    width: 4.5rem !important;
-    min-width: 4.5rem !important;
+    width: 4rem !important;
+    min-width: 4rem !important;
 }
 
 /* Numeric input validation styling */
