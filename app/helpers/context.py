@@ -114,8 +114,8 @@ def populate_product_list_context(request, context):
             default=None,  # Return None for N/A cases instead of 999
             output_field=IntegerField()
         )
-    ).filter(is_active=True)
-    
+    ).filter(is_active=True).order_by('code')
+
     # Apply filters to the queryset
     if code_filter:
         products = products.filter(code__icontains=code_filter)
