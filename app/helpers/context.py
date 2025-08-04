@@ -1,8 +1,9 @@
 from django.core.paginator import Paginator
 from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField, FloatField, Case, When, F
+from django.db.models.functions import Round
 from django.http import QueryDict
 from app.models import Product, DailyMetrics
-from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm, OrderDaysForm
+from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm, OrderDaysForm, ProductPOQuantityFilterForm
 from datetime import datetime, timedelta
 
 
@@ -64,6 +65,7 @@ def populate_product_list_context(request, context):
     stock_filter_form: ProductStockFilterForm = ProductStockFilterForm(data=filter_data)
     daily_demand_filter_form: ProductDailyDemandFilterForm = ProductDailyDemandFilterForm(data=filter_data)
     remainder_days_filter_form: ProductRemainderDaysFilterForm = ProductRemainderDaysFilterForm(data=filter_data)
+    product_po_quantity_filter_form: ProductPOQuantityFilterForm = ProductPOQuantityFilterForm(data=filter_data)
     order_days_form.is_valid()
     code_filter_form.is_valid()
     name_filter_form.is_valid()
@@ -72,6 +74,7 @@ def populate_product_list_context(request, context):
     stock_filter_form.is_valid()
     daily_demand_filter_form.is_valid()
     remainder_days_filter_form.is_valid()
+    product_po_quantity_filter_form.is_valid()
     
     code_filter: str = filter_data.get('code', '')
     name_filter: str = filter_data.get('name', '')
@@ -83,11 +86,20 @@ def populate_product_list_context(request, context):
     max_daily_demand: str = filter_data.get('max_daily_demand', '')
     min_remainder_days: str = filter_data.get('min_remainder_days', '')
     max_remainder_days: str = filter_data.get('max_remainder_days', '')
-    
+    min_po_quantity: str = filter_data.get('min_po_quantity', '')
+    max_po_quantity: str = filter_data.get('max_po_quantity', '')
+
     # Calculate date range for average daily demand (365 days back)
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=365)
     
+    # Get order_days value from form (default 1)
+    order_days_value: int = 0
+    if order_days_form.is_valid():
+        try:
+            order_days_value: int = int(order_days_form.cleaned_data.get('order_days', 0))
+        except (ValueError, TypeError):
+            pass
     # Annotate products with calculated fields
     products: QuerySet = Product.objects.select_related('category').prefetch_related('suppliers').annotate(
         # Current stock from latest daily metrics
@@ -113,6 +125,15 @@ def populate_product_list_context(request, context):
             ),
             default=None,  # Return None for N/A cases instead of 999
             output_field=IntegerField()
+        ),
+        # PO quantity: avg_daily_demand * order_days_value
+        po_quantity=Case(
+            When(
+                Q(avg_daily_demand__isnull=False) & Q(avg_daily_demand__gt=0),
+                then=Round(F('avg_daily_demand') * order_days_value)
+            ),
+            default=0,
+            output_field=IntegerField()
         )
     ).filter(is_active=True).order_by('code')
 
@@ -137,6 +158,9 @@ def populate_product_list_context(request, context):
 
     if min_remainder_days or max_remainder_days:
         products = apply_min_max_filter(products, 'remainder_days', min_remainder_days, max_remainder_days, int)
+        
+    if min_po_quantity or max_po_quantity:
+        products = apply_min_max_filter(products, 'po_quantity', min_po_quantity, max_po_quantity, int)
 
     # Pagination
     paginator: Paginator = Paginator(products, items_per_page)
@@ -156,6 +180,7 @@ def populate_product_list_context(request, context):
     context['stock_filter_form'] = stock_filter_form
     context['daily_demand_filter_form'] = daily_demand_filter_form
     context['remainder_days_filter_form'] = remainder_days_filter_form
+    context['product_po_quantity_filter_form'] = product_po_quantity_filter_form
     context['selected_categories'] = category_filter
     context['selected_suppliers'] = supplier_filter
 

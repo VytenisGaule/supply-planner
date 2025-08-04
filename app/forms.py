@@ -169,3 +169,9 @@ class ProductRemainderDaysFilterForm(MinMaxFilterForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__('remainder_days', 'days', *args, **kwargs)
+
+class ProductPOQuantityFilterForm(MinMaxFilterForm):
+    """Form for filtering products by PO quantity (min/max)"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__('po_quantity', 'quantity', *args, **kwargs)

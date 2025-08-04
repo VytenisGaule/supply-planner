@@ -2,7 +2,7 @@
 
 <tr class="border-b border-gray-200 bg-gray-100" hx-post="{% url 'get_product_filter' %}"
     hx-trigger="change delay:0.25s from:input" hx-target="#product-list" hx-swap="outerHTML"
-    hx-include="[name='code'], [name='name'], [name='categories'], [name='suppliers'], [name='min_stock'], [name='max_stock'], [name='min_daily_demand'], [name='max_daily_demand'], [name='min_remainder_days'], [name='max_remainder_days']">
+    hx-include="[name='code'], [name='name'], [name='categories'], [name='suppliers'], [name='min_stock'], [name='max_stock'], [name='min_daily_demand'], [name='max_daily_demand'], [name='min_remainder_days'], [name='max_remainder_days'], [name='min_po_quantity'], [name='max_po_quantity']">
     <th class="p-1 border-r border-gray-200">
         {{ code_filter_form.code }}
     </th>
@@ -52,6 +52,13 @@
             {{ remainder_days_filter_form.min_remainder_days|validate_no_error_str }}
             <span class="text-xs text-gray-400 self-center">-</span>
             {{ remainder_days_filter_form.max_remainder_days|validate_no_error_str }}
+        </div>
+    </th>
+    <th class="p-1 text-right">
+        <div class="flex gap-1">
+            {{ product_po_quantity_filter_form.min_po_quantity|validate_no_error_str }}
+            <span class="text-xs text-gray-400 self-center">-</span>
+            {{ product_po_quantity_filter_form.max_po_quantity|validate_no_error_str }}
         </div>
     </th>
 </tr>

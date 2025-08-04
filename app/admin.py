@@ -179,7 +179,7 @@ class DailyMetricsAdmin(admin.ModelAdmin):
         ('product__suppliers', RelatedDropdownFilter),
     )
     ordering = ['-date']
-    readonly_fields = ('product', 'date', 'sales_quantity', 'stock', 'potential_sales', 'lost_sales',)
+    # readonly_fields = ('product', 'date', 'sales_quantity', 'stock', 'potential_sales', 'lost_sales',)
     
     def get_queryset(self, request):
         """Optimize queryset to include related product data"""

@@ -1,6 +1,5 @@
 <div class="container mx-auto p-4" id="product-list">
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200"
-        x-data="{ 
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200" x-data="{ 
             filters: { 
                 code: '{{ code_filter_form.code.value|default:'' }}', 
                 name: '{{ name_filter_form.name.value|default:'' }}', 
@@ -40,8 +39,12 @@
                         class="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200">
                         Daily Demand
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200">
                         Remainder Days
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                        PO Quantity
                     </th>
                 </tr>
                 <!-- Filter row -->
@@ -84,9 +87,16 @@
                         -
                         {% endif %}
                     </td>
-                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 text-right">
+                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200 text-right">
                         {% if product.remainder_days is not None %}
                         {{ product.remainder_days }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-600 text-right">
+                        {% if product.po_quantity is not None %}
+                        {{ product.po_quantity|floatformat:2 }}
                         {% else %}
                         -
                         {% endif %}
