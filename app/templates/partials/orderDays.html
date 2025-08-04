@@ -1,6 +1,6 @@
 {% load commons %}
 
-<div class="mt-6 flex items-center" x-data="{order_days: {{ order_days|default:1 }}">
+<div class="mt-6 flex items-center" x-data="{order_days: '{{ order_days|default:'' }}'}">
     <!-- Order days input -->
     <div class="flex items-center space-x-2" hx-post="{% url 'get_order_days' %}" hx-trigger="change delay:50ms"
         hx-target="#product-list" hx-swap="outerHTML" hx-include="[name='order_days']">
