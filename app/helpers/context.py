@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator
 from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField, FloatField, Case, When, F
-from django.db.models.functions import Round
+from django.db.models.functions import Round, Greatest
 from django.http import QueryDict
 from app.models import Product, DailyMetrics
 from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm, OrderDaysForm, ProductPOQuantityFilterForm
@@ -126,11 +126,11 @@ def populate_product_list_context(request, context):
             default=None,  # Return None for N/A cases instead of 999
             output_field=IntegerField()
         ),
-        # PO quantity: avg_daily_demand * order_days_value
+        # PO quantity: avg_daily_demand * max(order_days_value - current_stock_coverage, 0)
         po_quantity=Case(
             When(
-                Q(avg_daily_demand__isnull=False) & Q(avg_daily_demand__gt=0),
-                then=Round(F('avg_daily_demand') * order_days_value)
+                Q(avg_daily_demand__isnull=False) & Q(avg_daily_demand__gt=0) & Q(current_stock__isnull=False),
+                then=Round(F('avg_daily_demand') * Greatest(order_days_value - (F('current_stock') / F('avg_daily_demand')), 0, output_field=FloatField()), output_field=FloatField())
             ),
             default=0,
             output_field=IntegerField()
