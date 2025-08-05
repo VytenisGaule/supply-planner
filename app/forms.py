@@ -36,9 +36,14 @@ class OrderDaysForm(forms.Form):
         order_days = cleaned_data.get('order_days')
         if order_days is not None and order_days < 1:
             self.add_error('order_days', 'Enter a positive number')
+        # Normalize order_days to string integer if valid
+        if order_days is not None and order_days != '':
+            try:
+                self.data = self.data.copy()
+                self.data['order_days'] = str(int(float(order_days)))
+            except ValueError:
+                self.add_error('order_days', 'Enter a positive number')
         return cleaned_data
-
-
 
 class ProductCodeFilterForm(forms.Form):
     """Form for filtering products by code"""
