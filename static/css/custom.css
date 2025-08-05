@@ -213,3 +213,23 @@ input[type="text"].text-xs {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* Compact table cell for product list */
+.product-list-td {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    /* text-xs */
+    color: #374151;
+    /* text-gray-700 */
+    text-align: left;
+    min-width: 60px;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-right: 1px solid #e5e7eb;
+    /* border-gray-200 */
+}
