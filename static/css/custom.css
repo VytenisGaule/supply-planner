@@ -189,3 +189,27 @@ input[type="text"].text-xs {
     font-size: 0.875rem !important;
     line-height: 1.25rem !important;
 }
+
+/* Compact table header for product list */
+.product-list-th {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    text-align: left;
+    font-size: 0.75rem;
+    /* text-xs */
+    font-weight: 500;
+    /* font-medium */
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    /* tracking-wider */
+    border-right: 1px solid #e5e7eb;
+    /* border-gray-200 */
+    min-width: 60px;
+    max-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

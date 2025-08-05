@@ -16,30 +16,14 @@
         <table class="w-full border-collapse">
             <thead class="bg-gray-50">
                 <tr class="border-b border-gray-200">
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
-                        Code</th>
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200 min-w-[80px] max-w-[120px] truncate">
-                        Name</th>
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
-                        Category</th>
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200 min-w-[80px] max-w-[100px] truncate">
-                        Suppliers</th>
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
-                        Stock</th>
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
-                        Demand</th>
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider border-r border-gray-200 min-w-[60px] max-w-[80px] truncate">
-                        Days</th>
-                    <th
-                        class="px-2 py-1 text-left text-xs font-medium text-black uppercase tracking-wider min-w-[60px] max-w-[80px] truncate">
-                        PO Qty</th>
+                    <th class="product-list-th">Code</th>
+                    <th class="product-list-th">Name</th>
+                    <th class="product-list-th">Category</th>
+                    <th class="product-list-th">Suppliers</th>
+                    <th class="product-list-th">Stock</th>
+                    <th class="product-list-th">Demand</th>
+                    <th class="product-list-th">Days</th>
+                    <th class="product-list-th">PO Qty</th>
                 </tr>
                 <!-- Filter row -->
                 {% include 'filters/product_filter.html' %}
