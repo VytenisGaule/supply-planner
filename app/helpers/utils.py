@@ -47,8 +47,8 @@ def queryset_to_excel(title: str, headers: list, queryset: QuerySet, row_func=No
     return wb
 
 def product_row(obj):
-    suppliers = ', '.join([s.company_name for s in obj.suppliers.all()]) if hasattr(obj, 'suppliers') else ''
-    category = str(getattr(obj, 'category', '')) if getattr(obj, 'category', None) else ''
+    suppliers = ', '.join([s.company_name for s in obj.suppliers.all()]) if hasattr(obj, 'suppliers') else '-'
+    category = str(getattr(obj, 'category', '')) if getattr(obj, 'category', None) else '-'
     return [
         obj.code,
         obj.name,
