@@ -98,10 +98,10 @@
             {% include 'partials/orderDays.html' %}
         </div>
         <div>
-            <button hx-get="{% url 'export_product_list_to_excel' %}" hx-target="body" hx-swap="none"
-                class="ml-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition">
+            <a href="{% url 'export_product_list_to_excel' %}"
+                class="ml-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition block text-center">
                 To Excel
-            </button>
+            </a>
         </div>
     </div>
 </div>

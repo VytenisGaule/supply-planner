@@ -65,7 +65,7 @@ def get_product_queryset(
     daily_demand_days: int = 365
 ) -> QuerySet:
     """
-    Returns filtered and annotated Product queryset for product list
+    Returns filtered and annotated Product queryset
     """
     if category_filter is None:
         category_filter = []
