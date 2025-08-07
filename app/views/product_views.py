@@ -3,8 +3,9 @@ from django.db.models import QuerySet
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.shortcuts import render
+import openpyxl
 from app.helpers.context import populate_product_list_context, get_product_queryset
-from app.helpers.utils import queryset_to_excel
+from app.helpers.utils import queryset_to_excel, product_row
 
 @csrf_protect
 def product_list(request):
@@ -79,10 +80,10 @@ def export_product_list_to_excel(request):
         max_po_quantity=max_po_quantity
     )
 
-    headers = [
+    headers: list = [
         'Code', 'Name', 'Category', 'Suppliers', 'Current stock', 'Daily Demand', 'Days Left', 'PO Qty'
     ]
-    wb = queryset_to_excel('Products', headers, products)
+    wb: openpyxl.Workbook = queryset_to_excel('Products', headers, products, row_func=product_row)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=products.xlsx'
     wb.save(response)

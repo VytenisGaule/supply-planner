@@ -22,28 +22,17 @@ def get_average_potential_sales(daily_metrics: QuerySet, min_stock: int) -> floa
         return 0.0
 
 
-def queryset_to_excel(title: str, headers: list, queryset: QuerySet) -> openpyxl.Workbook:
+def queryset_to_excel(title: str, headers: list, queryset: QuerySet, row_func=None) -> openpyxl.Workbook:
     wb: openpyxl.Workbook = openpyxl.Workbook()
     ws = wb.active
     ws.title = title
     ws.append(headers)
     for obj in queryset:
-        suppliers = ', '.join([s.company_name for s in obj.suppliers.all()]) if hasattr(obj, 'suppliers') else ''
-        category = getattr(obj, 'category', None)
-        if category:
-            category = str(category)
+        if row_func:
+            row = row_func(obj)
         else:
-            category = ''
-        row = [
-            getattr(obj, 'code', ''),
-            getattr(obj, 'name', ''),
-            category,
-            suppliers,
-            getattr(obj, 'current_stock', None) or '-',
-            getattr(obj, 'avg_daily_demand', None) or '-',
-            getattr(obj, 'remainder_days', None) or '-',
-            getattr(obj, 'po_quantity', None) or '-'
-        ]
+            # fallback: export all fields as strings
+            row = [str(getattr(obj, h, '-')) for h in headers]
         ws.append(row)
     for col in ws.columns:
         max_length = 0
@@ -57,3 +46,17 @@ def queryset_to_excel(title: str, headers: list, queryset: QuerySet) -> openpyxl
                 cell.value = '#N/A'
         ws.column_dimensions[column].width = max_length + 2
     return wb
+
+def product_row(obj):
+    suppliers = ', '.join([s.company_name for s in obj.suppliers.all()]) if hasattr(obj, 'suppliers') else ''
+    category = str(getattr(obj, 'category', '')) if getattr(obj, 'category', None) else ''
+    return [
+        obj.code,
+        obj.name,
+        category,
+        suppliers,
+        getattr(obj, 'current_stock', None) or '-',
+        getattr(obj, 'avg_daily_demand', None) or '-',
+        getattr(obj, 'remainder_days', None) or '-',
+        getattr(obj, 'po_quantity', None) or '-'
+    ]
