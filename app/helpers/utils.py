@@ -31,7 +31,6 @@ def queryset_to_excel(title: str, headers: list, queryset: QuerySet, row_func=No
         if row_func:
             row = row_func(obj)
         else:
-            # fallback: export all fields as strings
             row = [str(getattr(obj, h, '-')) for h in headers]
         ws.append(row)
     for col in ws.columns:
