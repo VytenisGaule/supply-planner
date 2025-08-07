@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.shortcuts import render
@@ -42,3 +43,6 @@ def get_product_filter(request):
     request.session['filter_data'] = request.POST
     populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
+
+def export_product_list_to_excel(request):
+    return HttpResponse('OK')

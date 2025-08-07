@@ -93,5 +93,15 @@
 
     <!-- Pagination -->
     {% include 'partials/pagination.html' with page_obj=products %}
-    {% include 'partials/orderDays.html' %}
+    <div class="flex items-center justify-between mt-2 border-b border-gray-200">
+        <div>
+            {% include 'partials/orderDays.html' %}
+        </div>
+        <div>
+            <button hx-get="{% url 'export_product_list_to_excel' %}" hx-target="body" hx-swap="none"
+                class="ml-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition">
+                To Excel
+            </button>
+        </div>
+    </div>
 </div>
