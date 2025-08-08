@@ -419,6 +419,7 @@ class PopulateProductListContextTestCase(TestCase):
             category=self.category1,
             last_purchase_price=Decimal('999.99')
         )
+            is_active=True
         self.product1.suppliers.add(self.supplier1)
         
         self.product2 = Product.objects.create(
@@ -426,6 +427,7 @@ class PopulateProductListContextTestCase(TestCase):
             name="Python Book",
             category=self.category2,
             last_purchase_price=Decimal('49.99')
+            is_active=True
         )
         self.product2.suppliers.add(self.supplier2)
         
@@ -434,6 +436,7 @@ class PopulateProductListContextTestCase(TestCase):
             code="PROD003",
             name="Mystery Item",
             category=None,
+            is_active=True
             last_purchase_price=Decimal('25.00')
         )
         
@@ -441,6 +444,7 @@ class PopulateProductListContextTestCase(TestCase):
         self.product4 = Product.objects.create(
             code="PROD004",
             name="Orphan Product",
+            is_active=True
             category=self.category1,
             last_purchase_price=Decimal('15.00')
         )
