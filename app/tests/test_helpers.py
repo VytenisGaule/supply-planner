@@ -19,8 +19,8 @@ class HelpersUtilsTestCase(TestCase):
         )
         
         self.product = Product.objects.create(
-            kodas="HELPER_TEST_001",
-            pavadinimas="Test Product for Helpers",
+            code="HELPER_TEST_001",
+            name="Test Product for Helpers",
             category=self.category,
             last_purchase_price=Decimal('25.00'),
             lead_time=30
@@ -163,8 +163,8 @@ class HelpersUtilsTestCase(TestCase):
         """Test average calculation with negative sales (returns)"""
         # Create a product with negative sales
         test_product = Product.objects.create(
-            kodas="NEG_SALES_TEST",
-            pavadinimas="Negative Sales Test Product",
+            code="NEG_SALES_TEST",
+            name="Negative Sales Test Product",
             category=self.category
         )
         
@@ -204,8 +204,8 @@ class UpdateAllPotentialSalesTestCase(TestCase):
         )
         
         self.product = Product.objects.create(
-            kodas="UPDATE_TEST_001",
-            pavadinimas="Update Test Product",
+            code="UPDATE_TEST_001",
+            name="Update Test Product",
             category=self.category,
             last_purchase_price=Decimal('15.00'),
             lead_time=45
@@ -279,8 +279,8 @@ class UpdateAllPotentialSalesTestCase(TestCase):
         """Test update when no days meet min_stock threshold"""
         # Create product with only zero stock
         test_product = Product.objects.create(
-            kodas="NO_GOOD_STOCK",
-            pavadinimas="No Good Stock Product",
+            code="NO_GOOD_STOCK",
+            name="No Good Stock Product",
             category=self.category
         )
         
@@ -343,8 +343,8 @@ class UpdateAllPotentialSalesTestCase(TestCase):
     def test_update_all_potential_sales_no_metrics(self):
         """Test update when product has no metrics"""
         empty_product = Product.objects.create(
-            kodas="EMPTY_PRODUCT",
-            pavadinimas="Empty Product",
+            code="EMPTY_PRODUCT",
+            name="Empty Product",
             category=self.category
         )
         
@@ -414,16 +414,16 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Create products
         self.product1 = Product.objects.create(
-            kodas="PROD001",
-            pavadinimas="Laptop",
+            code="PROD001",
+            name="Laptop",
             category=self.category1,
             last_purchase_price=Decimal('999.99')
         )
         self.product1.suppliers.add(self.supplier1)
         
         self.product2 = Product.objects.create(
-            kodas="PROD002",
-            pavadinimas="Python Book",
+            code="PROD002",
+            name="Python Book",
             category=self.category2,
             last_purchase_price=Decimal('49.99')
         )
@@ -431,16 +431,16 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Product without category
         self.product3 = Product.objects.create(
-            kodas="PROD003",
-            pavadinimas="Mystery Item",
+            code="PROD003",
+            name="Mystery Item",
             category=None,
             last_purchase_price=Decimal('25.00')
         )
         
         # Product without suppliers
         self.product4 = Product.objects.create(
-            kodas="PROD004",
-            pavadinimas="Orphan Product",
+            code="PROD004",
+            name="Orphan Product",
             category=self.category1,
             last_purchase_price=Decimal('15.00')
         )
@@ -490,7 +490,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should only show product with code containing 'PROD001'
         self.assertEqual(context['products'].paginator.count, 1)
-        self.assertEqual(context['products'][0].kodas, 'PROD001')
+        self.assertEqual(context['products'][0].code, 'PROD001')
     
     def test_populate_product_list_context_with_name_filter(self):
         """Test context population with name filter"""
@@ -502,7 +502,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should only show product with name containing 'Book'
         self.assertEqual(context['products'].paginator.count, 1)
-        self.assertEqual(context['products'][0].pavadinimas, 'Python Book')
+        self.assertEqual(context['products'][0].name, 'Python Book')
     
     def test_populate_product_list_context_with_category_filter(self):
         """Test context population with category filter"""
@@ -514,7 +514,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should show products in category1 (Laptop and Orphan Product)
         self.assertEqual(context['products'].paginator.count, 2)
-        product_names = [p.pavadinimas for p in context['products']]
+        product_names = [p.name for p in context['products']]
         self.assertIn('Laptop', product_names)
         self.assertIn('Orphan Product', product_names)
     
@@ -528,7 +528,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should only show product without category (Mystery Item)
         self.assertEqual(context['products'].paginator.count, 1)
-        self.assertEqual(context['products'][0].pavadinimas, 'Mystery Item')
+        self.assertEqual(context['products'][0].name, 'Mystery Item')
     
     def test_populate_product_list_context_with_supplier_filter(self):
         """Test context population with supplier filter"""
@@ -540,7 +540,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should only show product from supplier1 (Laptop)
         self.assertEqual(context['products'].paginator.count, 1)
-        self.assertEqual(context['products'][0].pavadinimas, 'Laptop')
+        self.assertEqual(context['products'][0].name, 'Laptop')
     
     def test_populate_product_list_context_with_empty_supplier_filter(self):
         """Test context population with 'empty' supplier filter (no suppliers)"""
@@ -552,7 +552,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should show products without suppliers (Mystery Item and Orphan Product)
         self.assertEqual(context['products'].paginator.count, 2)
-        product_names = [p.pavadinimas for p in context['products']]
+        product_names = [p.name for p in context['products']]
         self.assertIn('Mystery Item', product_names)
         self.assertIn('Orphan Product', product_names)
     
@@ -567,7 +567,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should only show Laptop (in category1 AND has supplier1)
         self.assertEqual(context['products'].paginator.count, 1)
-        self.assertEqual(context['products'][0].pavadinimas, 'Laptop')
+        self.assertEqual(context['products'][0].name, 'Laptop')
     
     def test_populate_product_list_context_with_mixed_category_filter(self):
         """Test context population with both 'empty' and specific category"""
@@ -579,7 +579,7 @@ class PopulateProductListContextTestCase(TestCase):
         
         # Should show products with no category OR in category1
         self.assertEqual(context['products'].paginator.count, 3)
-        product_names = [p.pavadinimas for p in context['products']]
+        product_names = [p.name for p in context['products']]
         self.assertIn('Mystery Item', product_names)  # No category
         self.assertIn('Laptop', product_names)        # Category1
         self.assertIn('Orphan Product', product_names) # Category1
@@ -649,8 +649,8 @@ class GetRemainderDaysTestCase(TestCase):
         )
         
         self.product = Product.objects.create(
-            kodas="REMAINDER_TEST_001",
-            pavadinimas="Test Product for Remainder Days",
+            code="REMAINDER_TEST_001",
+            name="Test Product for Remainder Days",
             category=self.category,
             last_purchase_price=Decimal('50.00'),
             lead_time=30
@@ -854,8 +854,8 @@ class GetCurrentStockTestCase(TestCase):
         )
         
         self.product = Product.objects.create(
-            kodas="STOCK_TEST_001",
-            pavadinimas="Test Product for Current Stock",
+            code="STOCK_TEST_001",
+            name="Test Product for Current Stock",
             category=self.category,
             last_purchase_price=Decimal('25.00'),
             lead_time=30
@@ -1020,16 +1020,16 @@ class ApplyRelationFilterTestCase(TestCase):
         
         # Create products with categories and suppliers
         self.product1 = Product.objects.create(
-            kodas="PROD001",
-            pavadinimas="Laptop",
+            code="PROD001",
+            name="Laptop",
             category=self.category1,
             last_purchase_price=Decimal('999.99')
         )
         self.product1.suppliers.add(self.supplier1)
         
         self.product2 = Product.objects.create(
-            kodas="PROD002",
-            pavadinimas="Python Book",
+            code="PROD002",
+            name="Python Book",
             category=self.category2,
             last_purchase_price=Decimal('49.99')
         )
@@ -1037,8 +1037,8 @@ class ApplyRelationFilterTestCase(TestCase):
         
         # Product without category but with supplier
         self.product3 = Product.objects.create(
-            kodas="PROD003",
-            pavadinimas="Mystery Item",
+            code="PROD003",
+            name="Mystery Item",
             category=None,
             last_purchase_price=Decimal('25.00')
         )
@@ -1046,24 +1046,24 @@ class ApplyRelationFilterTestCase(TestCase):
         
         # Product without suppliers but with category
         self.product4 = Product.objects.create(
-            kodas="PROD004",
-            pavadinimas="Orphan Product",
+            code="PROD004",
+            name="Orphan Product",
             category=self.category1,
             last_purchase_price=Decimal('15.00')
         )
         
         # Product with no category and no suppliers
         self.product5 = Product.objects.create(
-            kodas="PROD005",
-            pavadinimas="Truly Orphan Product",
+            code="PROD005",
+            name="Truly Orphan Product",
             category=None,
             last_purchase_price=Decimal('5.00')
         )
         
         # Product with multiple suppliers
         self.product6 = Product.objects.create(
-            kodas="PROD006",
-            pavadinimas="Multi-Supplier Product",
+            code="PROD006",
+            name="Multi-Supplier Product",
             category=self.category2,
             last_purchase_price=Decimal('100.00')
         )
@@ -1244,24 +1244,24 @@ class ApplyMinMaxFilterTestCase(TestCase):
         
         # Create products with different characteristics
         self.product1 = Product.objects.create(
-            kodas="MINMAX_001",
-            pavadinimas="Product 1",
+            code="MINMAX_001",
+            name="Product 1",
             category=self.category,
             last_purchase_price=Decimal('10.00'),
             lead_time=30
         )
         
         self.product2 = Product.objects.create(
-            kodas="MINMAX_002", 
-            pavadinimas="Product 2",
+            code="MINMAX_002", 
+            name="Product 2",
             category=self.category,
             last_purchase_price=Decimal('20.00'),
             lead_time=45
         )
         
         self.product3 = Product.objects.create(
-            kodas="MINMAX_003",
-            pavadinimas="Product 3", 
+            code="MINMAX_003",
+            name="Product 3", 
             category=self.category,
             last_purchase_price=Decimal('30.00'),
             lead_time=60
@@ -1302,8 +1302,8 @@ class ApplyMinMaxFilterTestCase(TestCase):
         
         # Product 4: No metrics (will have None values)
         self.product4 = Product.objects.create(
-            kodas="MINMAX_004",
-            pavadinimas="Product 4 - No Data",
+            code="MINMAX_004",
+            name="Product 4 - No Data",
             category=self.category,
             last_purchase_price=Decimal('40.00'),
             lead_time=15
@@ -1311,8 +1311,8 @@ class ApplyMinMaxFilterTestCase(TestCase):
         
         # Product 5: Zero stock product
         self.product5 = Product.objects.create(
-            kodas="MINMAX_005",
-            pavadinimas="Product 5 - Zero Stock",
+            code="MINMAX_005",
+            name="Product 5 - Zero Stock",
             category=self.category,
             last_purchase_price=Decimal('50.00'),
             lead_time=20
@@ -1371,7 +1371,7 @@ class ApplyMinMaxFilterTestCase(TestCase):
         result = apply_min_max_filter(queryset, 'current_stock', '20', '40')
         
         # Should include product2 (stock ~25) but exclude product1 (stock ~50) and product3 (stock 5)
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         self.assertIn('MINMAX_002', result_list)
         self.assertNotIn('MINMAX_001', result_list)  # Too high
         self.assertNotIn('MINMAX_003', result_list)  # Too low
@@ -1385,7 +1385,7 @@ class ApplyMinMaxFilterTestCase(TestCase):
         # Filter for products with current stock >= 20
         result = apply_min_max_filter(queryset, 'current_stock', '20', '')
         
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         self.assertIn('MINMAX_001', result_list)  # High stock
         self.assertIn('MINMAX_002', result_list)  # Medium stock
         self.assertNotIn('MINMAX_003', result_list)  # Low stock
@@ -1398,7 +1398,7 @@ class ApplyMinMaxFilterTestCase(TestCase):
         
         # Filter for products with current stock <= 30, should include None values
         result = apply_min_max_filter(queryset, 'current_stock', '', '30')
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         # Should include product2 (medium stock), product3 (low stock), product5 (zero stock), and product4 (None)
         self.assertNotIn('MINMAX_001', result_list)  # Too high
         self.assertIn('MINMAX_002', result_list)  # Medium stock
@@ -1443,7 +1443,7 @@ class ApplyMinMaxFilterTestCase(TestCase):
         # Filter for products with average daily demand between 3 and 8
         result = apply_min_max_filter(queryset, 'avg_daily_demand', '3', '8')
         
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         # Product2 should have avg demand ~5.5, Product3 should have ~1
         self.assertIn('MINMAX_002', result_list)
         self.assertNotIn('MINMAX_001', result_list)  # Too high (~11)
@@ -1459,7 +1459,7 @@ class ApplyMinMaxFilterTestCase(TestCase):
         # Filter for products with remainder days between 10 and 100
         result = apply_min_max_filter(queryset, 'remainder_days', '10', '100')
         
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         # Product1: ~47 stock / ~11 demand = ~4.3 days (too low)
         # Product2: ~24 stock / ~5.5 demand = ~4.4 days (too low)
         # Product3: 5 stock / 1 demand = 5 days (too low)
@@ -1473,7 +1473,7 @@ class ApplyMinMaxFilterTestCase(TestCase):
         # Filter for products with current stock >= 0 (should include zero stock)
         result = apply_min_max_filter(queryset, 'current_stock', '0', '')
         
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         self.assertIn('MINMAX_001', result_list)  # High stock
         self.assertIn('MINMAX_002', result_list)  # Medium stock
         self.assertIn('MINMAX_003', result_list)  # Low stock
@@ -1487,12 +1487,12 @@ class ApplyMinMaxFilterTestCase(TestCase):
         # Any numeric filter should exclude products with None values
         result = apply_min_max_filter(queryset, 'current_stock', '0', '1000')
         
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         self.assertNotIn('MINMAX_004', result_list)  # Should exclude None values
         
         # Same for avg_daily_demand
         result = apply_min_max_filter(queryset, 'avg_daily_demand', '0', '1000')
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         self.assertNotIn('MINMAX_004', result_list)  # Should exclude None values
     
     def test_apply_min_max_filter_inverted_range(self):
@@ -1551,6 +1551,6 @@ class ApplyMinMaxFilterTestCase(TestCase):
         # Get current stock of product3 (should be 5)
         result = apply_min_max_filter(queryset, 'current_stock', '5', '5')
         
-        result_list = list(result.values_list('kodas', flat=True))
+        result_list = list(result.values_list('code', flat=True))
         # Should include product3 which has exactly 5 stock
         self.assertIn('MINMAX_003', result_list)

@@ -232,16 +232,16 @@ class ProductModelTest(TestCase):
         
         # Create products
         self.product1 = Product.objects.create(
-            kodas='LAP001',
-            pavadinimas='Gaming Laptop',
+            code='LAP001',
+            name='Gaming Laptop',
             category=self.laptops,
             last_purchase_price=1299.99,
             currency='USD'
         )
         
         self.product2 = Product.objects.create(
-            kodas='LAP002',
-            pavadinimas='Business Laptop',
+            code='LAP002',
+            name='Business Laptop',
             category=self.laptops,
             last_purchase_price=899.50,
             currency='EUR'
@@ -249,7 +249,7 @@ class ProductModelTest(TestCase):
         
         # Product without kodas
         self.product3 = Product.objects.create(
-            pavadinimas='Unnamed Product',
+            name='Unnamed Product',
             category=self.electronics
         )
         
@@ -267,24 +267,24 @@ class ProductModelTest(TestCase):
         """Test that kodas is unique when not blank"""
         # This should work - blank kodas is allowed
         Product.objects.create(
-            pavadinimas='Another Unnamed Product'
+            name='Another Unnamed Product'
         )
         
         # This should fail - duplicate kodas
         with self.assertRaises(IntegrityError):
             Product.objects.create(
-                kodas='LAP001',  # Duplicate
-                pavadinimas='Duplicate Laptop'
+                code='LAP001',  # Duplicate
+                name='Duplicate Laptop'
             )
     
     def test_multiple_blank_kodas_allowed(self):
         """Test that multiple products with blank kodas are allowed"""
-        product4 = Product.objects.create(pavadinimas='Product 4')
-        product5 = Product.objects.create(pavadinimas='Product 5')
+        product4 = Product.objects.create(name='Product 4')
+        product5 = Product.objects.create(name='Product 5')
         
         # Both should exist
-        self.assertTrue(Product.objects.filter(pavadinimas='Product 4').exists())
-        self.assertTrue(Product.objects.filter(pavadinimas='Product 5').exists())
+        self.assertTrue(Product.objects.filter(name='Product 4').exists())
+        self.assertTrue(Product.objects.filter(name='Product 5').exists())
     
     def test_currency_choices(self):
         """Test currency field choices"""
@@ -293,8 +293,8 @@ class ProductModelTest(TestCase):
         
         # Test default currency
         product = Product.objects.create(
-            kodas='TEST001',
-            pavadinimas='Test Product'
+            code='TEST001',
+            name='Test Product'
         )
         self.assertEqual(product.currency, 'USD')  # Default
     
@@ -360,32 +360,32 @@ class CategoryProductRelationshipTest(TestCase):
         
         # Create products at different levels
         self.general_electronics = Product.objects.create(
-            kodas='GEN001',
-            pavadinimas='General Electronic Device',
+            code='GEN001',
+            name='General Electronic Device',
             category=self.electronics
         )
         
         self.desktop = Product.objects.create(
-            kodas='DESK001',
-            pavadinimas='Desktop Computer',
+            code='DESK001',
+            name='Desktop Computer',
             category=self.computers
         )
         
         self.business_laptop = Product.objects.create(
-            kodas='BUS001',
-            pavadinimas='Business Laptop',
+            code='BUS001',
+            name='Business Laptop',
             category=self.laptops
         )
         
         self.gaming_laptop1 = Product.objects.create(
-            kodas='GAM001',
-            pavadinimas='Gaming Laptop Pro',
+            code='GAM001',
+            name='Gaming Laptop Pro',
             category=self.gaming_laptops
         )
         
         self.gaming_laptop2 = Product.objects.create(
-            kodas='GAM002',
-            pavadinimas='Gaming Laptop Elite',
+            code='GAM002',
+            name='Gaming Laptop Elite',
             category=self.gaming_laptops
         )
     
@@ -461,16 +461,16 @@ class ModelIntegrationTest(TestCase):
         
         # Create products with relationships
         self.laptop1 = Product.objects.create(
-            kodas='LAP2024001',
-            pavadinimas='Professional Laptop',
+            code='LAP2024001',
+            name='Professional Laptop',
             category=self.laptops,
             last_purchase_price=1599.99,
             currency='USD'
         )
         
         self.laptop2 = Product.objects.create(
-            kodas='LAP2024002',
-            pavadinimas='Budget Laptop',
+            code='LAP2024002',
+            name='Budget Laptop',
             category=self.laptops,
             last_purchase_price=799.50,
             currency='EUR'
@@ -525,21 +525,21 @@ class ModelIntegrationTest(TestCase):
         with transaction.atomic():
             with self.assertRaises(IntegrityError):
                 Product.objects.create(
-                    kodas='LAP2024001',  # Duplicate
-                    pavadinimas='Duplicate Product'
+                    code='LAP2024001',  # Duplicate
+                    name='Duplicate Product'
                 )
         
         # Test that blank kodas is allowed
         product_no_code = Product.objects.create(
-            kodas='',  # Use empty string instead of duplicate
-            pavadinimas='Product Without Code'
+            code='',  # Use empty string instead of duplicate
+            name='Product Without Code'
         )
-        self.assertEqual(product_no_code.kodas, '')
+        self.assertEqual(product_no_code.code, '')
         
         # Test currency choices
         product_usd = Product.objects.create(
-            kodas='TEST999',  # Use unique code
-            pavadinimas='USD Product',
+            code='TEST999',  # Use unique code
+            name='USD Product',
             currency='USD'
         )
         self.assertEqual(product_usd.currency, 'USD')
@@ -617,8 +617,8 @@ class MockDataFactory:
         name_suffix = MockDataFactory.random_string(8)
         
         default_data = {
-            'kodas': f"PROD_{code_suffix}",
-            'pavadinimas': f"Product {name_suffix}",
+            'code': f"PROD_{code_suffix}",
+            'name': f"Product {name_suffix}",
             'category': category,
             'last_purchase_price': Decimal(str(MockDataFactory.random_price())),
             'currency': random.choice(['USD', 'EUR'])
@@ -761,29 +761,28 @@ class AdvancedModelTestCase(TestCase):
         """Test that circular references in categories are handled"""
         # Create categories
         cat1 = MockDataFactory.create_mock_category()
-        cat2 = MockDataFactory.create_mock_category(parent=cat1)
-        
-        # Attempt to create circular reference
-        # This should be prevented at the application level
-        # (Note: Django doesn't prevent this at DB level by default)
-        cat1.parent = cat2
-        
-        # In a real application, you'd want to add validation to prevent this
-        # For now, we'll just verify the structure
-        with self.assertRaises(Exception):
-            # This would create infinite recursion in get_path()
-            # We can test this by calling get_path() after creating the circular ref
-            cat1.save()
-            cat1.get_path()  # This should fail with recursion
-    
+        category = MockDataFactory.create_mock_category()
+        def create_product_with_code(code):
+            return Product.objects.create(
+                code=code,
+                name=f'Product {code}',
+                category=category
+            )
+
+        product1 = create_product_with_code('CONCURRENT001')
+        self.assertIsNotNone(product1.id)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                create_product_with_code('CONCURRENT001')
     def test_product_price_edge_cases(self):
         """Test product price handling with edge cases"""
         category = MockDataFactory.create_mock_category()
         
         # Test with zero price
         product_zero = Product.objects.create(
-            kodas='ZERO001',
-            pavadinimas='Zero Price Product',
+            code='ZERO001',
+            name='Zero Price Product',
             category=category,
             last_purchase_price=Decimal('0.0000'),
             currency='USD'
@@ -792,8 +791,8 @@ class AdvancedModelTestCase(TestCase):
         
         # Test with very high precision
         product_precise = Product.objects.create(
-            kodas='PRECISE001',
-            pavadinimas='High Precision Product',
+            code='PRECISE001',
+            name='High Precision Product',
             category=category,
             last_purchase_price=Decimal('1234.5678'),
             currency='EUR'
@@ -802,8 +801,8 @@ class AdvancedModelTestCase(TestCase):
         
         # Test with None price
         product_no_price = Product.objects.create(
-            kodas='NOPRICE001',
-            pavadinimas='No Price Product',
+            code='NOPRICE001',
+            name='No Price Product',
             category=category
         )
         self.assertIsNone(product_no_price.last_purchase_price)
@@ -825,8 +824,8 @@ class AdvancedModelTestCase(TestCase):
         
         # Create product with unicode name
         unicode_product = Product.objects.create(
-            kodas='UNICODE002',
-            pavadinimas='Produktas ąčęėįšųū 中文 العربية',
+            code='UNICODE002',
+            name='Produktas ąčęėįšųū 中文 العربية',
             category=unicode_category,
             last_purchase_price=Decimal('999.99'),
             currency='EUR'
@@ -850,16 +849,16 @@ class AdvancedModelTestCase(TestCase):
         )
         
         # Create product with maximum length name
-        long_name = 'B' * 400  # Maximum length for pavadinimas
+        long_name = 'B' * 400  # Maximum length for name
         
         long_product = Product.objects.create(
-            kodas='LONG002',
-            pavadinimas=long_name,
+            code='LONG002',
+            name=long_name,
             category=long_category
         )
         
         self.assertEqual(len(long_category.description), 1000)
-        self.assertEqual(len(long_product.pavadinimas), 400)
+        self.assertEqual(len(long_product.name), 400)
 
 
 class DatabaseTransactionTestCase(TransactionTestCase):
@@ -869,10 +868,10 @@ class DatabaseTransactionTestCase(TransactionTestCase):
         """Test concurrent product creation with same kodas"""
         category = MockDataFactory.create_mock_category()
         
-        def create_product_with_code(kodas):
+        def create_product_with_code(code):
             return Product.objects.create(
-                kodas=kodas,
-                pavadinimas=f'Product {kodas}',
+                code=code,
+                name=f'Product {code}',
                 category=category
             )
         
@@ -880,7 +879,7 @@ class DatabaseTransactionTestCase(TransactionTestCase):
         product1 = create_product_with_code('CONCURRENT001')
         self.assertIsNotNone(product1.id)
         
-        # Second product with same kodas should fail
+        # Second product with same code should fail
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 create_product_with_code('CONCURRENT001')
@@ -894,8 +893,8 @@ class DatabaseTransactionTestCase(TransactionTestCase):
         products_data = []
         for i in range(100):
             products_data.append(Product(
-                kodas=f'BULK{i:03d}',
-                pavadinimas=f'Bulk Product {i}',
+                code=f'BULK{i:03d}',
+                name=f'Bulk Product {i}',
                 category=category,
                 last_purchase_price=Decimal(str(MockDataFactory.random_price())),
                 currency=random.choice(['USD', 'EUR'])
@@ -906,7 +905,7 @@ class DatabaseTransactionTestCase(TransactionTestCase):
         self.assertEqual(len(products), 100)
         
         # Verify all products were created
-        self.assertEqual(Product.objects.filter(kodas__startswith='BULK').count(), 100)
+        self.assertEqual(Product.objects.filter(code__startswith='BULK').count(), 100)
 
 
 class MockedExternalServiceTestCase(TestCase):
@@ -917,8 +916,8 @@ class MockedExternalServiceTestCase(TestCase):
         # Note: This is a placeholder test for future currency conversion functionality
         category = MockDataFactory.create_mock_category()
         product = Product.objects.create(
-            kodas='CURRENCY001',
-            pavadinimas='Currency Test Product',
+            code='CURRENCY001',
+            name='Currency Test Product',
             category=category,
             last_purchase_price=Decimal('100.00'),
             currency='EUR'
@@ -1021,23 +1020,23 @@ class EdgeCaseTestCase(TestCase):
         """Test handling of empty strings vs null values"""
         category = MockDataFactory.create_mock_category()
         
-        # Product with empty string kodas
+        # Product with empty string code
         product_empty = Product.objects.create(
-            kodas='',  # Empty string
-            pavadinimas='Empty Code Product',
+            code='',  # Empty string
+            name='Empty Code Product',
             category=category
         )
         
-        # Product with null kodas
+        # Product with null code
         product_null = Product.objects.create(
-            kodas=None,  # Null
-            pavadinimas='Null Code Product',
+            code=None,  # Null
+            name='Null Code Product',
             category=category
         )
         
         # Both should be allowed (unique constraint only applies to non-empty)
-        self.assertEqual(product_empty.kodas, '')
-        self.assertIsNone(product_null.kodas)
+        self.assertEqual(product_empty.code, '')
+        self.assertIsNone(product_null.code)
         
         # Test string representation
         self.assertEqual(str(product_empty), ' - Empty Code Product')
@@ -1131,10 +1130,10 @@ class TestDataFixtures:
     ]
     
     SAMPLE_PRODUCTS = [
-        {'kodas': 'LAP001', 'pavadinimas': 'Business Laptop', 'price': '1299.99', 'currency': 'USD'},
-        {'kodas': 'MOU001', 'pavadinimas': 'Wireless Mouse', 'price': '29.99', 'currency': 'USD'},
-        {'kodas': 'CHR001', 'pavadinimas': 'Office Chair', 'price': '299.50', 'currency': 'EUR'},
-        {'kodas': 'PEN001', 'pavadinimas': 'Ballpoint Pen Set', 'price': '15.99', 'currency': 'USD'},
+        {'code': 'LAP001', 'name': 'Business Laptop', 'price': '1299.99', 'currency': 'USD'},
+        {'code': 'MOU001', 'name': 'Wireless Mouse', 'price': '29.99', 'currency': 'USD'},
+        {'code': 'CHR001', 'name': 'Office Chair', 'price': '299.50', 'currency': 'EUR'},
+        {'code': 'PEN001', 'name': 'Ballpoint Pen Set', 'price': '15.99', 'currency': 'USD'},
     ]
     
     @classmethod
@@ -1155,8 +1154,8 @@ class TestDataFixtures:
         for i, prod_data in enumerate(cls.SAMPLE_PRODUCTS):
             category = list(categories.values())[i % len(categories)]
             product = Product.objects.create(
-                kodas=prod_data['kodas'],
-                pavadinimas=prod_data['pavadinimas'],
+                code=prod_data['code'],
+                name=prod_data['name'],
                 category=category,
                 last_purchase_price=Decimal(prod_data['price']),
                 currency=prod_data['currency']
@@ -1221,8 +1220,8 @@ class AverageDailyDemandTestCase(TestCase):
         )
         
         self.product = Product.objects.create(
-            kodas="DEMAND_TEST_001",
-            pavadinimas="Demand Test Product",
+            code="DEMAND_TEST_001",
+            name="Demand Test Product",
             category=self.category,
             last_purchase_price=Decimal('50.00'),
             lead_time=30
@@ -1326,8 +1325,8 @@ class AverageDailyDemandTestCase(TestCase):
         """Test average daily demand when no potential_sales data exists"""
         # Create a product with no potential_sales data
         test_product = Product.objects.create(
-            kodas="NO_POTENTIAL_SALES",
-            pavadinimas="No Potential Sales Product",
+            code="NO_POTENTIAL_SALES",
+            name="No Potential Sales Product",
             category=self.category
         )
         
@@ -1348,8 +1347,8 @@ class AverageDailyDemandTestCase(TestCase):
     def test_get_average_daily_demand_no_metrics(self):
         """Test average daily demand when product has no metrics"""
         empty_product = Product.objects.create(
-            kodas="EMPTY_PRODUCT",
-            pavadinimas="Empty Product",
+            code="EMPTY_PRODUCT",
+            name="Empty Product",
             category=self.category
         )
         
@@ -1372,8 +1371,8 @@ class AverageDailyDemandTestCase(TestCase):
         """Test average daily demand with zero potential_sales values"""
         # Create product with zero potential_sales
         zero_product = Product.objects.create(
-            kodas="ZERO_DEMAND",
-            pavadinimas="Zero Demand Product",
+            code="ZERO_DEMAND",
+            name="Zero Demand Product",
             category=self.category
         )
         
@@ -1393,8 +1392,8 @@ class AverageDailyDemandTestCase(TestCase):
     def test_get_average_daily_demand_mixed_zero_and_positive(self):
         """Test average daily demand with mix of zero and positive potential_sales"""
         mixed_product = Product.objects.create(
-            kodas="MIXED_DEMAND",
-            pavadinimas="Mixed Demand Product",
+            code="MIXED_DEMAND",
+            name="Mixed Demand Product",
             category=self.category
         )
         
@@ -1426,8 +1425,8 @@ class AverageDailyDemandTestCase(TestCase):
     def test_get_average_daily_demand_decimal_precision(self):
         """Test average daily demand with decimal precision"""
         decimal_product = Product.objects.create(
-            kodas="DECIMAL_DEMAND",
-            pavadinimas="Decimal Demand Product",
+            code="DECIMAL_DEMAND",
+            name="Decimal Demand Product",
             category=self.category
         )
         
@@ -1455,8 +1454,8 @@ class AverageDailyDemandTestCase(TestCase):
         
         # Test without data
         empty_product = Product.objects.create(
-            kodas="TYPE_TEST",
-            pavadinimas="Type Test Product",
+            code="TYPE_TEST",
+            name="Type Test Product",
             category=self.category
         )
         result_without_data = empty_product.get_average_daily_demand()
