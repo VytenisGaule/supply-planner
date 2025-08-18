@@ -29,7 +29,7 @@ class OrderDaysForm(forms.Form):
         widget=forms.TextInput(attrs={
             'name': 'order_days',
             'placeholder': 'Order days',
-            'class': 'filter-input text-xs',
+            'class': 'filter-input text-sm bg-gray-100 border-2',
         })
     )
 
