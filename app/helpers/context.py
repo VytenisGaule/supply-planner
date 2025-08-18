@@ -2,7 +2,7 @@ from django.core.paginator import Paginator
 from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField, FloatField, Case, When, F
 from django.db.models.functions import Round, Greatest
 from django.http import QueryDict
-from app.models import Product, DailyMetrics
+from app.models import Category, Product, DailyMetrics
 from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm, OrderDaysForm, ProductPOQuantityFilterForm
 from datetime import datetime, timedelta
 
@@ -67,9 +67,12 @@ def get_product_queryset(
     """
     Returns filtered and annotated Product queryset
     """
-    if category_filter is None:
+    if not category_filter:
         category_filter = []
-    if supplier_filter is None:
+    # else:
+    #     #todo Expand category filter to include all descendants if needed
+
+    if not supplier_filter:
         supplier_filter = []
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=daily_demand_days)
@@ -110,7 +113,16 @@ def get_product_queryset(
     if name_filter:
         products = products.filter(name__icontains=name_filter)
     if category_filter:
-        products = apply_relation_filter(products, category_filter, 'category')
+        expanded_ids = set()
+        for cat_id in category_filter:
+            if cat_id == 'empty':
+                expanded_ids.add('empty')
+                continue
+            category = Category.objects.get(pk=cat_id)
+            expanded_ids.add(category.id)
+            expanded_ids.update(cat.id for cat in category.get_descendants())
+        expanded_category_filter = list(expanded_ids)
+        products = apply_relation_filter(products, expanded_category_filter, 'category')
     if supplier_filter:
         products = apply_relation_filter(products, supplier_filter, 'suppliers')
     if min_stock or max_stock:

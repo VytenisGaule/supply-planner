@@ -128,7 +128,7 @@ class ProductAdmin(admin.ModelAdmin):
         IsNewProductFilter,
     )
     ordering = ['code']
-    readonly_fields = ('code', 'name', 'category', 'last_purchase_price', 'currency', 'supplier_list', 'is_internet')
+    readonly_fields = ('code', 'name', 'last_purchase_price', 'currency', 'supplier_list', 'is_internet')
     fieldsets = (
         ('ERP data', {
             'fields': ('code', 'name', 'category', 'last_purchase_price', 'currency', 'supplier_list', 'is_internet')
