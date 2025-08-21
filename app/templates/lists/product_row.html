@@ -1,0 +1,51 @@
+<tr class="hover:bg-gray-200 cursor-pointer border-b border-gray-200" id="product-{{ product.id }}"
+    @click="showProductModal = !showProductModal">
+    <td class="product-list-td border-r border-gray-200">
+        {{ product.code }}
+    </td>
+    <td class="product-list-td border-r border-gray-200">
+        {{ product.name }}
+    </td>
+    <td class="product-list-td border-r border-gray-200">
+        {% if product.category %}
+        {{ product.category }}
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td class="product-list-td border-r border-gray-200">
+        {% for supplier in product.suppliers.all %}
+        {{ supplier.company_name }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+        -
+        {% endfor %}
+    </td>
+    <td class="product-list-td border-r border-gray-200">
+        {% if product.current_stock is not None %}
+        {{ product.current_stock }}
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td class="product-list-td border-r border-gray-200">
+        {% if product.avg_daily_demand is not None %}
+        {{ product.avg_daily_demand|floatformat:2 }}
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td class="product-list-td border-r border-gray-200">
+        {% if product.remainder_days is not None %}
+        {{ product.remainder_days }}
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td class="product-list-td">
+        {% if product.po_quantity is not None %}
+        {{ product.po_quantity|floatformat:2 }}
+        {% else %}
+        -
+        {% endif %}
+    </td>
+</tr>
