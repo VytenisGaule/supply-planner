@@ -52,7 +52,7 @@ def product_details_modal(request, product_id: int):
     get product details
     """
     context: dict = {}
-    return render(request, 'lists/product_modal.html', context=context)
+    return render(request, 'modals/product_modal_content.html', context=context)
 
 def export_product_list_to_excel(request):
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())

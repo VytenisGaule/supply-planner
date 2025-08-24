@@ -1,5 +1,6 @@
 <tr class="hover:bg-gray-200 cursor-pointer border-b border-gray-200" id="product-{{ product.id }}"
-    @click="showProductModal = !showProductModal">
+    @click="showProductModal = true" hx-get="/product-details-modal/{{ product.id }}/"
+    hx-target="#product-modal-content" hx-swap="innerHTML">
     <td class="product-list-td border-r border-gray-200">
         {{ product.code }}
     </td>

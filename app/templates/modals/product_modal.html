@@ -1,6 +1,4 @@
 <div id="product-modal" class="z-50 flex items-center justify-center bg-black bg-opacity-50" x-show="showProductModal"
     style="display:none;">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative" @click.outside="showProductModal = false">
-        test test
-    </div>
+    {% include 'modals/product_modal_content.html' %}
 </div>
