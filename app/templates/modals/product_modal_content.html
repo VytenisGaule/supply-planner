@@ -1,4 +1,9 @@
 <div id="product-modal-content" class="bg-white rounded-lg shadow-lg w-full p-6 relative"
     @click.outside="showProductModal = false">
-    test test
+    {{ product.name }}
+    {% for metric in daily_metrics %}
+    <span>
+        {{ metric }}
+    </span>
+    {% endfor %}
 </div>

@@ -6,6 +6,7 @@ from django.shortcuts import render
 import openpyxl
 from app.helpers.context import populate_product_list_context, get_product_queryset
 from app.helpers.utils import queryset_to_excel, product_row
+from app.models import Product
 
 @csrf_protect
 def product_list(request):
@@ -52,6 +53,12 @@ def product_details_modal(request, product_id: int):
     get product details
     """
     context: dict = {}
+    product: Product = Product.objects.filter(id=product_id).first()
+    daily_metrics: QuerySet
+    if product:
+        daily_metrics: QuerySet = product.daily_metrics.all().order_by('date')
+    context['product'] = product
+    context['daily_metrics'] = daily_metrics
     return render(request, 'modals/product_modal_content.html', context=context)
 
 def export_product_list_to_excel(request):
