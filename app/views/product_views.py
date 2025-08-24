@@ -47,6 +47,13 @@ def get_product_filter(request):
     populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
 
+def product_details_modal(request, product_id: int):
+    """
+    get product details
+    """
+    context: dict = {}
+    return render(request, 'lists/product_modal.html', context=context)
+
 def export_product_list_to_excel(request):
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
     order_days_data: QueryDict = request.session.get('order_days_data', QueryDict())

@@ -28,8 +28,8 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% include 'lists/product_modal.html' %}
     </div>
-
     <!-- Pagination -->
     {% include 'partials/pagination.html' with page_obj=products %}
     <div class="flex items-center justify-between mt-2 border-b border-gray-200">
@@ -43,5 +43,4 @@
             </a>
         </div>
     </div>
-    {% include 'lists/product_modal.html' %}
 </div>
