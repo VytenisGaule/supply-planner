@@ -1,9 +1,13 @@
+{% load static %}
+
 <div id="product-modal-content" class="bg-white rounded-lg shadow-lg w-full p-6 relative"
     @click.outside="showProductModal = false">
-    {{ product.name }}
-    {% for metric in daily_metrics %}
-    <span>
-        {{ metric }}
-    </span>
-    {% endfor %}
+    <canvas id="sparkline" width="120" height="20"></canvas>
+    <div class="mb-2 font-semibold text-sm text-gray-700">
+        {{ product.code }} {{ product.name }}
+    </div>
+    <div id="sparkline-data" data-dates='{{ dates|default:"[]"|safe }}' data-stocks='{{ stocks|default:"[]"|safe }}'>
+    </div>
 </div>
+<script src="{% static 'js/chart.min.js' %}"></script>
+<script src="{% static 'js/sparkline_chart.js' %}"></script>

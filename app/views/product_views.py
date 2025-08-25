@@ -1,3 +1,4 @@
+import json
 from django.http import HttpResponse, QueryDict
 from django.db.models import QuerySet
 from django.views.decorators.csrf import csrf_protect
@@ -54,11 +55,16 @@ def product_details_modal(request, product_id: int):
     """
     context: dict = {}
     product: Product = Product.objects.filter(id=product_id).first()
-    daily_metrics: QuerySet
-    if product:
-        daily_metrics: QuerySet = product.daily_metrics.all().order_by('date')
     context['product'] = product
-    context['daily_metrics'] = daily_metrics
+    if product:
+        daily_metrics = product.daily_metrics.order_by('date')
+        dates: list = [str(metric.date) for metric in daily_metrics]
+        stocks: list = [metric.stock for metric in daily_metrics]
+        context['dates'] = json.dumps(dates)
+        context['stocks'] = json.dumps(stocks)
+    else:
+        context['dates'] = json.dumps([])
+        context['stocks'] = json.dumps([])
     return render(request, 'modals/product_modal_content.html', context=context)
 
 def export_product_list_to_excel(request):
