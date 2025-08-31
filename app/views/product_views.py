@@ -45,10 +45,14 @@ def get_product_filter(request):
     get product filter
     """
     context: dict = {}
-    filter_data = request.POST.copy()
-    for key in ['categories', 'suppliers']:
-        filter_data.setlist(key, request.POST.getlist(key))
-    request.session['filter_data'] = dict(filter_data)
+    multi_value_fields: list = ['categories', 'suppliers']
+    filter_data: dict = {}
+    for key in request.POST.keys():
+        if key in multi_value_fields:
+            filter_data[key] = request.POST.getlist(key)
+        else:
+            filter_data[key] = request.POST.get(key)
+    request.session['filter_data'] = filter_data
     populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
 
