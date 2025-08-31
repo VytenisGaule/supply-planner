@@ -48,35 +48,61 @@ def apply_min_max_filter(queryset: QuerySet, field_name: str, min_value: str, ma
     return queryset
 
 
-def get_product_queryset(
-    order_days_value: int,
-    code_filter: str = '',
-    name_filter: str = '',
-    category_filter: list = None,
-    supplier_filter: list = None,
-    min_stock: str = '',
-    max_stock: str = '',
-    min_daily_demand: str = '',
-    max_daily_demand: str = '',
-    min_remainder_days: str = '',
-    max_remainder_days: str = '',
-    min_po_quantity: str = '',
-    max_po_quantity: str = '',
-    daily_demand_days: int = 365
-) -> QuerySet:
+
+def filter_product_queryset(
+        product_queryset: QuerySet,
+        code_filter: str = '',
+        name_filter: str = '',
+        category_filter: list = None,
+        supplier_filter: list = None,
+        min_stock: str = '',
+        max_stock: str = '',
+        min_daily_demand: str = '',
+        max_daily_demand: str = '',
+        min_remainder_days: str = '',
+        max_remainder_days: str = '',
+        min_po_quantity: str = '',
+        max_po_quantity: str = ''
+    ) -> QuerySet:
     """
-    Returns filtered and annotated Product queryset
+    Returns filtered Product queryset (no annotation)
     """
     if not category_filter:
         category_filter = []
-    # else:
-    #     #todo Expand category filter to include all descendants if needed
-
     if not supplier_filter:
         supplier_filter = []
+    products = product_queryset.filter(is_active=True).order_by('code')
+    if code_filter:
+        products = products.filter(code__icontains=code_filter)
+    if name_filter:
+        products = products.filter(name__icontains=name_filter)
+    if category_filter:
+        expanded_ids = set()
+        for cat_id in category_filter:
+            if cat_id == 'empty':
+                expanded_ids.add('empty')
+                continue
+            category = Category.objects.get(pk=cat_id)
+            expanded_ids.add(category.id)
+            expanded_ids.update(cat.id for cat in category.get_descendants())
+        expanded_category_filter = list(expanded_ids)
+        products = apply_relation_filter(products, expanded_category_filter, 'category')
+    if supplier_filter:
+        products = apply_relation_filter(products, supplier_filter, 'suppliers')
+    # Removed filters for annotated fields: current_stock, avg_daily_demand, remainder_days, po_quantity
+    return products
+
+def annotate_product_queryset(
+        product_queryset: QuerySet,
+        order_days_value: int,
+        daily_demand_days: int = 365
+    ) -> QuerySet:
+    """
+    Annotates a Product queryset (no filtering)
+    """
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=daily_demand_days)
-    products = Product.objects.select_related('category').prefetch_related('suppliers').annotate(
+    products = product_queryset.select_related('category').prefetch_related('suppliers').annotate(
         current_stock=Subquery(
             DailyMetrics.objects.filter(
                 product=OuterRef('pk')
@@ -106,33 +132,7 @@ def get_product_queryset(
             default=0,
             output_field=IntegerField()
         )
-    ).filter(is_active=True).order_by('code')
-
-    if code_filter:
-        products = products.filter(code__icontains=code_filter)
-    if name_filter:
-        products = products.filter(name__icontains=name_filter)
-    if category_filter:
-        expanded_ids = set()
-        for cat_id in category_filter:
-            if cat_id == 'empty':
-                expanded_ids.add('empty')
-                continue
-            category = Category.objects.get(pk=cat_id)
-            expanded_ids.add(category.id)
-            expanded_ids.update(cat.id for cat in category.get_descendants())
-        expanded_category_filter = list(expanded_ids)
-        products = apply_relation_filter(products, expanded_category_filter, 'category')
-    if supplier_filter:
-        products = apply_relation_filter(products, supplier_filter, 'suppliers')
-    if min_stock or max_stock:
-        products = apply_min_max_filter(products, 'current_stock', min_stock, max_stock, int)
-    if min_daily_demand or max_daily_demand:
-        products = apply_min_max_filter(products, 'avg_daily_demand', min_daily_demand, max_daily_demand, float)
-    if min_remainder_days or max_remainder_days:
-        products = apply_min_max_filter(products, 'remainder_days', min_remainder_days, max_remainder_days, int)
-    if min_po_quantity or max_po_quantity:
-        products = apply_min_max_filter(products, 'po_quantity', min_po_quantity, max_po_quantity, int)
+    )
     return products
 
 
@@ -184,9 +184,10 @@ def populate_product_list_context(request, context):
             order_days_value: int = int(order_days_form.cleaned_data.get('order_days', 0))
         except (ValueError, TypeError):
             pass
-    # Annotate products with calculated fields
-    products: QuerySet = get_product_queryset(
-        order_days_value=order_days_value,
+
+    # Filtering
+    all_products: QuerySet = filter_product_queryset(
+        Product.objects.all(),
         code_filter=code_filter,
         name_filter=name_filter,
         category_filter=category_filter,
@@ -200,12 +201,18 @@ def populate_product_list_context(request, context):
         min_po_quantity=min_po_quantity,
         max_po_quantity=max_po_quantity
     )
-
     # Pagination
-    paginator: Paginator = Paginator(products, items_per_page)
+    paginator: Paginator = Paginator(all_products, items_per_page)
     page_number: str = request.GET.get('page') if request.GET.get('page') else request.POST.get('page_number', 1)
     page_obj = paginator.get_page(page_number)
-    
+    # Annotate only the products on the current page
+    page_products: QuerySet = Product.objects.filter(pk__in=[p.pk for p in page_obj.object_list])
+    annotated_page_products: QuerySet = annotate_product_queryset(
+        page_products,
+        order_days_value=order_days_value
+    )
+    # Replace page_obj.object_list with annotated products
+    page_obj.object_list = list(annotated_page_products)
     # Update the context dictionary
     context['products'] = page_obj
     context['paginator'] = paginator

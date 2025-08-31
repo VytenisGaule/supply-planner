@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.shortcuts import render
 import openpyxl
-from app.helpers.context import populate_product_list_context, get_product_queryset
+from app.helpers.context import populate_product_list_context, filter_product_queryset, annotate_product_queryset
 from app.helpers.utils import queryset_to_excel, product_row
 from app.models import Product
 
@@ -83,9 +83,9 @@ def export_product_list_to_excel(request):
     min_po_quantity: str = filter_data.get('min_po_quantity', '')
     max_po_quantity: str = filter_data.get('max_po_quantity', '')
     order_days_value = order_days_data.get('order_days', '') or 0
-        
-    products: QuerySet = get_product_queryset(
-        order_days_value=order_days_value,
+
+    products: QuerySet = filter_product_queryset(
+        product_queryset=Product.objects.filter(is_active=True).order_by('code'),
         code_filter=code_filter,
         name_filter=name_filter,
         category_filter=category_filter,
@@ -98,6 +98,10 @@ def export_product_list_to_excel(request):
         max_remainder_days=max_remainder_days,
         min_po_quantity=min_po_quantity,
         max_po_quantity=max_po_quantity
+    )
+    products = annotate_product_queryset(
+        product_queryset=products,
+        order_days_value=order_days_value
     )
 
     headers: list = [
