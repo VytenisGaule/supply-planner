@@ -150,32 +150,32 @@ def populate_product_list_context(request, context):
     name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
     category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data)
     supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data)
-    stock_filter_form: ProductStockFilterForm = ProductStockFilterForm(data=filter_data)
-    daily_demand_filter_form: ProductDailyDemandFilterForm = ProductDailyDemandFilterForm(data=filter_data)
-    remainder_days_filter_form: ProductRemainderDaysFilterForm = ProductRemainderDaysFilterForm(data=filter_data)
-    product_po_quantity_filter_form: ProductPOQuantityFilterForm = ProductPOQuantityFilterForm(data=filter_data)
+    # stock_filter_form: ProductStockFilterForm = ProductStockFilterForm(data=filter_data)
+    # daily_demand_filter_form: ProductDailyDemandFilterForm = ProductDailyDemandFilterForm(data=filter_data)
+    # remainder_days_filter_form: ProductRemainderDaysFilterForm = ProductRemainderDaysFilterForm(data=filter_data)
+    # product_po_quantity_filter_form: ProductPOQuantityFilterForm = ProductPOQuantityFilterForm(data=filter_data)
     order_days_form.is_valid()
     code_filter_form.is_valid()
     name_filter_form.is_valid()
     category_filter_form.is_valid()
     supplier_filter_form.is_valid()
-    stock_filter_form.is_valid()
-    daily_demand_filter_form.is_valid()
-    remainder_days_filter_form.is_valid()
-    product_po_quantity_filter_form.is_valid()
+    # stock_filter_form.is_valid()
+    # daily_demand_filter_form.is_valid()
+    # remainder_days_filter_form.is_valid()
+    # product_po_quantity_filter_form.is_valid()
     
     code_filter: str = filter_data.get('code', '')
     name_filter: str = filter_data.get('name', '')
     category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
     supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
-    min_stock: str = filter_data.get('min_stock', '')
-    max_stock: str = filter_data.get('max_stock', '')
-    min_daily_demand: str = filter_data.get('min_daily_demand', '')
-    max_daily_demand: str = filter_data.get('max_daily_demand', '')
-    min_remainder_days: str = filter_data.get('min_remainder_days', '')
-    max_remainder_days: str = filter_data.get('max_remainder_days', '')
-    min_po_quantity: str = filter_data.get('min_po_quantity', '')
-    max_po_quantity: str = filter_data.get('max_po_quantity', '')
+    # min_stock: str = filter_data.get('min_stock', '')
+    # max_stock: str = filter_data.get('max_stock', '')
+    # min_daily_demand: str = filter_data.get('min_daily_demand', '')
+    # max_daily_demand: str = filter_data.get('max_daily_demand', '')
+    # min_remainder_days: str = filter_data.get('min_remainder_days', '')
+    # max_remainder_days: str = filter_data.get('max_remainder_days', '')
+    # min_po_quantity: str = filter_data.get('min_po_quantity', '')
+    # max_po_quantity: str = filter_data.get('max_po_quantity', '')
 
     # Get order_days value from form (default 1)
     order_days_value: int = 0
@@ -192,14 +192,14 @@ def populate_product_list_context(request, context):
         name_filter=name_filter,
         category_filter=category_filter,
         supplier_filter=supplier_filter,
-        min_stock=min_stock,
-        max_stock=max_stock,
-        min_daily_demand=min_daily_demand,
-        max_daily_demand=max_daily_demand,
-        min_remainder_days=min_remainder_days,
-        max_remainder_days=max_remainder_days,
-        min_po_quantity=min_po_quantity,
-        max_po_quantity=max_po_quantity
+        # min_stock=min_stock,
+        # max_stock=max_stock,
+        # min_daily_demand=min_daily_demand,
+        # max_daily_demand=max_daily_demand,
+        # min_remainder_days=min_remainder_days,
+        # max_remainder_days=max_remainder_days,
+        # min_po_quantity=min_po_quantity,
+        # max_po_quantity=max_po_quantity
     )
     # Pagination
     paginator: Paginator = Paginator(all_products, items_per_page)
@@ -223,10 +223,10 @@ def populate_product_list_context(request, context):
     context['name_filter_form'] = name_filter_form
     context['category_filter_form'] = category_filter_form
     context['supplier_filter_form'] = supplier_filter_form
-    context['stock_filter_form'] = stock_filter_form
-    context['daily_demand_filter_form'] = daily_demand_filter_form
-    context['remainder_days_filter_form'] = remainder_days_filter_form
-    context['product_po_quantity_filter_form'] = product_po_quantity_filter_form
+    # context['stock_filter_form'] = stock_filter_form
+    # context['daily_demand_filter_form'] = daily_demand_filter_form
+    # context['remainder_days_filter_form'] = remainder_days_filter_form
+    # context['product_po_quantity_filter_form'] = product_po_quantity_filter_form
     context['selected_categories'] = category_filter
     context['selected_suppliers'] = supplier_filter
 

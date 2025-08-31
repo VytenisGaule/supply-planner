@@ -45,7 +45,10 @@ def get_product_filter(request):
     get product filter
     """
     context: dict = {}
-    request.session['filter_data'] = request.POST
+    filter_data = request.POST.copy()
+    for key in ['categories', 'suppliers']:
+        filter_data.setlist(key, request.POST.getlist(key))
+    request.session['filter_data'] = dict(filter_data)
     populate_product_list_context(request, context)
     return render(request, 'lists/product_list.html', context=context)
 
