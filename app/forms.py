@@ -88,12 +88,18 @@ class ProductCategoryFilterForm(forms.Form):
             'multiple': 'multiple'
         })
     )
-    
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, *args, request=None, **kwargs):
         super().__init__(*args, **kwargs)
         # Add "No category" option first, then all categories
-        choices = [('empty', 'Be kategorijos')]
-        choices.extend([(cat.id, cat.name) for cat in Category.objects.all()])
+        category_ids: list[int] = request.session.get('category_ids')
+        if category_ids is None:
+            category_ids = list(Category.objects.values_list('id', flat=True))
+        if Category.objects.filter(id__in=category_ids).filter(products__isnull=True).exists():
+            choices: list[tuple] = [('empty', 'Be kategorijos')]
+        else:
+            choices: list[tuple] = []
+        choices.extend([(cat.id, cat.name) for cat in Category.objects.filter(id__in=category_ids)])
         self.fields['categories'].choices = choices
 
 
@@ -110,12 +116,18 @@ class ProductSupplierFilterForm(forms.Form):
             'multiple': 'multiple'
         })
     )
-    
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, *args, request=None, **kwargs):
         super().__init__(*args, **kwargs)
         # Add "No suppliers" option first, then all suppliers
-        choices = [('empty', 'Be tiekėjų')]
-        choices.extend([(sup.id, sup.company_name) for sup in Supplier.objects.all()])
+        supplier_ids: list[int] = request.session.get('supplier_ids')
+        if supplier_ids is None:
+            supplier_ids = list(Supplier.objects.values_list('id', flat=True))
+        if Supplier.objects.filter(id__in=supplier_ids).filter(products__isnull=True).exists():
+            choices: list[tuple] = [('empty', 'Be tiekėjų')]
+        else:
+            choices: list[tuple] = []
+        choices.extend([(sup.id, sup.company_name) for sup in Supplier.objects.filter(id__in=supplier_ids)])
         self.fields['suppliers'].choices = choices
 
 

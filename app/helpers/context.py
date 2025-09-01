@@ -2,8 +2,9 @@ from django.core.paginator import Paginator
 from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField, FloatField, Case, When, F
 from django.db.models.functions import Round, Greatest
 from django.http import QueryDict
-from app.models import Category, Product, DailyMetrics
+from app.models import Category, Product, DailyMetrics, Supplier
 from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, ProductStockFilterForm, ProductDailyDemandFilterForm, ProductRemainderDaysFilterForm, OrderDaysForm, ProductPOQuantityFilterForm
+from app.helpers.utils import get_filter_dropdown_queryset
 from datetime import datetime, timedelta
 
 
@@ -135,25 +136,13 @@ def populate_product_list_context(request, context):
     items_per_page: int = request.session.get('items_per_page', 20)
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
     order_days_data: QueryDict = request.session.get('order_days_data', QueryDict())
-
-    items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
-    order_days_form: OrderDaysForm = OrderDaysForm(data=order_days_data)
-    code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
-    name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
-    category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data)
-    supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data)
-    order_days_form.is_valid()
-    code_filter_form.is_valid()
-    name_filter_form.is_valid()
-    category_filter_form.is_valid()
-    supplier_filter_form.is_valid()
-    
     code_filter: str = filter_data.get('code', '')
     name_filter: str = filter_data.get('name', '')
     category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
     supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
 
     # Get order_days value from form (default 1)
+    order_days_form: OrderDaysForm = OrderDaysForm(data=order_days_data)
     order_days_value: int = 0
     if order_days_form.is_valid():
         try:
@@ -169,6 +158,22 @@ def populate_product_list_context(request, context):
         category_filter=category_filter,
         supplier_filter=supplier_filter
     )
+    
+    # update session multiselect dropdowns QuerySets
+    request.session['category_ids'] = get_filter_dropdown_queryset(all_products, Category, 'products')
+    request.session['supplier_ids'] = get_filter_dropdown_queryset(all_products, Supplier, 'products')
+
+    items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
+    code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
+    name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
+    category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data, request=request)
+    supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data, request=request)
+    order_days_form.is_valid()
+    code_filter_form.is_valid()
+    name_filter_form.is_valid()
+    category_filter_form.is_valid()
+    supplier_filter_form.is_valid()
+
     # Pagination
     paginator: Paginator = Paginator(all_products, items_per_page)
     page_number: str = request.GET.get('page') if request.GET.get('page') else request.POST.get('page_number', 1)

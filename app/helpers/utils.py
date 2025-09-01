@@ -1,9 +1,7 @@
-from datetime import date
 from decimal import Decimal
 from typing import Optional
-from django.db.models import QuerySet, Avg
+from django.db.models import QuerySet, Avg, Model
 import openpyxl
-from openpyxl.utils import get_column_letter
 
 
 def get_average_potential_sales(daily_metrics: QuerySet, min_stock: int) -> float:
@@ -59,3 +57,11 @@ def product_row(obj):
         getattr(obj, 'remainder_days', None) or '-',
         getattr(obj, 'po_quantity', None) or '-'
     ]
+
+def get_filter_dropdown_queryset(queryset: QuerySet, model: Model, related_name: str) -> list:
+    """
+    Return distinct model PKs for related name filter dropdowns
+    """
+    filter_kwargs = {f"{related_name}__in": queryset}
+    pk_name = model._meta.pk.name
+    return list(model.objects.filter(**filter_kwargs).distinct().values_list(pk_name, flat=True))
