@@ -81,14 +81,6 @@ def export_product_list_to_excel(request):
     name_filter: str = filter_data.get('name', '')
     category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
     supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
-    min_stock: str = filter_data.get('min_stock', '')
-    max_stock: str = filter_data.get('max_stock', '')
-    min_daily_demand: str = filter_data.get('min_daily_demand', '')
-    max_daily_demand: str = filter_data.get('max_daily_demand', '')
-    min_remainder_days: str = filter_data.get('min_remainder_days', '')
-    max_remainder_days: str = filter_data.get('max_remainder_days', '')
-    min_po_quantity: str = filter_data.get('min_po_quantity', '')
-    max_po_quantity: str = filter_data.get('max_po_quantity', '')
     order_days_value = order_days_data.get('order_days', '') or 0
 
     products: QuerySet = filter_product_queryset(
@@ -96,15 +88,7 @@ def export_product_list_to_excel(request):
         code_filter=code_filter,
         name_filter=name_filter,
         category_filter=category_filter,
-        supplier_filter=supplier_filter,
-        min_stock=min_stock,
-        max_stock=max_stock,
-        min_daily_demand=min_daily_demand,
-        max_daily_demand=max_daily_demand,
-        min_remainder_days=min_remainder_days,
-        max_remainder_days=max_remainder_days,
-        min_po_quantity=min_po_quantity,
-        max_po_quantity=max_po_quantity
+        supplier_filter=supplier_filter
     )
     products = annotate_product_queryset(
         product_queryset=products,

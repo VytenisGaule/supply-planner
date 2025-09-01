@@ -54,15 +54,7 @@ def filter_product_queryset(
         code_filter: str = '',
         name_filter: str = '',
         category_filter: list = None,
-        supplier_filter: list = None,
-        min_stock: str = '',
-        max_stock: str = '',
-        min_daily_demand: str = '',
-        max_daily_demand: str = '',
-        min_remainder_days: str = '',
-        max_remainder_days: str = '',
-        min_po_quantity: str = '',
-        max_po_quantity: str = ''
+        supplier_filter: list = None
     ) -> QuerySet:
     """
     Returns filtered Product queryset (no annotation)

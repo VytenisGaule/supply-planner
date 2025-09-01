@@ -1,7 +1,8 @@
 {% load commons %}
 
 <tr class="border-b border-gray-200 bg-gray-100" hx-post="{% url 'get_product_filter' %}"
-    hx-trigger="change delay:0.25s from:input" hx-target="#product-list" hx-swap="outerHTML"
+    hx-trigger="change delay:0.25s from:[name='code'], change delay:0.25s from:[name='name'], change delay:0.25s from:[name='categories'], change delay:0.25s from:[name='suppliers']"
+    hx-target="#product-list" hx-swap="outerHTML"
     hx-include="[name='code'], [name='name'], [name='categories'], [name='suppliers']">
     <th class="p-1 border-r border-gray-200">
         {{ code_filter_form.code }}
