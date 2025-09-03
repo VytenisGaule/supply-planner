@@ -9,6 +9,22 @@ from app.helpers.context import populate_product_list_context, apply_min_max_fil
 
 
 class HelpersUtilsTestCase(TestCase):
+    def test_get_filter_dropdown_queryset_basic(self):
+        """Test get_filter_dropdown_queryset returns correct category ids for product queryset"""
+        from app.helpers.utils import get_filter_dropdown_queryset
+        # Create another category and product
+        category2 = Category.objects.create(category_code="TEST_HELPERS2", name="Second Category")
+        product2 = Product.objects.create(code="HELPER_TEST_002", name="Second Product", category=category2, last_purchase_price=Decimal('30.00'), lead_time=10)
+        # QuerySet with both products
+        qs = Product.objects.filter(pk__in=[self.product.pk, product2.pk])
+        # Should return both category ids
+        ids = get_filter_dropdown_queryset(qs, Category, 'products')
+        self.assertIn(self.category.pk, ids)
+        self.assertIn(category2.pk, ids)
+        # QuerySet with only one product
+        qs_single = Product.objects.filter(pk=self.product.pk)
+        ids_single = get_filter_dropdown_queryset(qs_single, Category, 'products')
+        self.assertEqual(ids_single, [self.category.pk])
     """Test cases for helpers.utils functions"""
     
     def setUp(self):
@@ -417,16 +433,16 @@ class PopulateProductListContextTestCase(TestCase):
             code="PROD001",
             name="Laptop",
             category=self.category1,
-            last_purchase_price=Decimal('999.99')
-        )
+            last_purchase_price=Decimal('999.99'),
             is_active=True
+        )
         self.product1.suppliers.add(self.supplier1)
         
         self.product2 = Product.objects.create(
             code="PROD002",
             name="Python Book",
             category=self.category2,
-            last_purchase_price=Decimal('49.99')
+            last_purchase_price=Decimal('49.99'),
             is_active=True
         )
         self.product2.suppliers.add(self.supplier2)
@@ -436,7 +452,7 @@ class PopulateProductListContextTestCase(TestCase):
             code="PROD003",
             name="Mystery Item",
             category=None,
-            is_active=True
+            is_active=True,
             last_purchase_price=Decimal('25.00')
         )
         
@@ -444,7 +460,7 @@ class PopulateProductListContextTestCase(TestCase):
         self.product4 = Product.objects.create(
             code="PROD004",
             name="Orphan Product",
-            is_active=True
+            is_active=True,
             category=self.category1,
             last_purchase_price=Decimal('15.00')
         )
