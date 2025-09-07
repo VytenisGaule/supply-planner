@@ -78,6 +78,7 @@ def export_product_list_to_excel(request):
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
     order_days_data: QueryDict = request.session.get('order_days_data', QueryDict())
     code_filter: str = filter_data.get('code', '')
+    model_filter: str = filter_data.get('model', '')
     name_filter: str = filter_data.get('name', '')
     category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
     supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
@@ -86,6 +87,7 @@ def export_product_list_to_excel(request):
     products: QuerySet = filter_product_queryset(
         product_queryset=Product.objects.filter(is_active=True).order_by('code'),
         code_filter=code_filter,
+        model_filter=model_filter,
         name_filter=name_filter,
         category_filter=category_filter,
         supplier_filter=supplier_filter
@@ -96,7 +98,7 @@ def export_product_list_to_excel(request):
     )
 
     headers: list = [
-        'Code', 'Name', 'Category', 'Suppliers', 'Current stock', 'Daily Demand', 'Days Left', 'PO Qty'
+        'Code', 'Model', 'Name', 'Category', 'Suppliers', 'Current stock', 'Daily Demand', 'Days Left', 'PO Qty'
     ]
     wb: openpyxl.Workbook = queryset_to_excel('Products', headers, products, row_func=product_row)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

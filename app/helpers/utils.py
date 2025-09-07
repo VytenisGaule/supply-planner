@@ -49,6 +49,7 @@ def product_row(obj):
     category = str(getattr(obj, 'category', '')) if getattr(obj, 'category', None) else '-'
     return [
         obj.code,
+        obj.model,
         obj.name,
         category,
         suppliers,
