@@ -117,8 +117,8 @@ class InStockProductFilter(admin.SimpleListFilter):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """Product admin"""
-    list_display = ('code', 'name', 'category', 'supplier_list', 'has_stock_display', 'is_internet', 'is_active', 'is_new_product_display')
-    search_fields = ('code', 'name')
+    list_display = ('code', 'model', 'name', 'category', 'supplier_list', 'has_stock_display', 'is_internet', 'is_active', 'is_new_product_display')
+    search_fields = ('code', 'model', 'name')
     list_filter = (
         ('category', RelatedDropdownFilter),
         ('suppliers', RelatedDropdownFilter),

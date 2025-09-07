@@ -129,7 +129,8 @@ class Product(models.Model):
     ]
     
     # fields to import from ERP
-    code = models.CharField(max_length=50, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True, help_text='ERP code')
+    model = models.CharField(max_length=100, null=True, blank=True, help_text='Supplier model/code')
     name = models.CharField(max_length=400, null=True, blank=True)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     last_purchase_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True, help_text="Last purchase price")
