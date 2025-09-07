@@ -61,6 +61,19 @@ class ProductCodeFilterForm(forms.Form):
     )
 
 
+class ProductModelFilterForm(forms.Form):
+    """Form for filtering products by model"""
+    
+    model = forms.CharField(
+        required=False,
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            'name': 'model',
+            'placeholder': 'Filter by model...',
+            'class': 'w-full p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+        })
+    )
+
 class ProductNameFilterForm(forms.Form):
     """Form for filtering products by name"""
     

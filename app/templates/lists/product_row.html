@@ -5,6 +5,13 @@
         {{ product.code }}
     </td>
     <td class="product-list-td border-r border-gray-200">
+        {% if product.model %}
+        {{ product.model }}
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td class="product-list-td border-r border-gray-200">
         {{ product.name }}
     </td>
     <td class="product-list-td border-r border-gray-200">

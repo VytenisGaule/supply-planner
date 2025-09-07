@@ -3,7 +3,7 @@ from django.db.models import QuerySet, Q, Avg, Subquery, OuterRef, IntegerField,
 from django.db.models.functions import Round, Greatest
 from django.http import QueryDict
 from app.models import Category, Product, DailyMetrics, Supplier
-from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, OrderDaysForm
+from app.forms import ItemsPerPageForm, ProductCodeFilterForm, ProductModelFilterForm, ProductNameFilterForm, ProductCategoryFilterForm, ProductSupplierFilterForm, OrderDaysForm
 from app.helpers.utils import get_filter_dropdown_queryset
 from datetime import datetime, timedelta
 
@@ -53,6 +53,7 @@ def apply_min_max_filter(queryset: QuerySet, field_name: str, min_value: str, ma
 def filter_product_queryset(
         product_queryset: QuerySet,
         code_filter: str = '',
+        model_filter: str = '',
         name_filter: str = '',
         category_filter: list = None,
         supplier_filter: list = None
@@ -67,6 +68,8 @@ def filter_product_queryset(
     products = product_queryset.filter(is_active=True).order_by('code')
     if code_filter:
         products = products.filter(code__icontains=code_filter)
+    if model_filter:
+        products = products.filter(model__icontains=model_filter)
     if name_filter:
         products = products.filter(name__icontains=name_filter)
     if category_filter:
@@ -137,6 +140,7 @@ def populate_product_list_context(request, context):
     filter_data: QueryDict = request.session.get('filter_data', QueryDict())
     order_days_data: QueryDict = request.session.get('order_days_data', QueryDict())
     code_filter: str = filter_data.get('code', '')
+    model_filter: str = filter_data.get('model', '')
     name_filter: str = filter_data.get('name', '')
     category_filter: list = filter_data.getlist('categories') if hasattr(filter_data, 'getlist') else filter_data.get('categories', [])
     supplier_filter: list = filter_data.getlist('suppliers') if hasattr(filter_data, 'getlist') else filter_data.get('suppliers', [])
@@ -154,6 +158,7 @@ def populate_product_list_context(request, context):
     all_products: QuerySet = filter_product_queryset(
         Product.objects.all(),
         code_filter=code_filter,
+        model_filter=model_filter,
         name_filter=name_filter,
         category_filter=category_filter,
         supplier_filter=supplier_filter
@@ -165,11 +170,13 @@ def populate_product_list_context(request, context):
 
     items_per_page_form: ItemsPerPageForm = ItemsPerPageForm(initial={'items_per_page': items_per_page})
     code_filter_form: ProductCodeFilterForm = ProductCodeFilterForm(data=filter_data)
+    model_filter_form: ProductModelFilterForm = ProductModelFilterForm(data=filter_data)
     name_filter_form: ProductNameFilterForm = ProductNameFilterForm(data=filter_data)
     category_filter_form: ProductCategoryFilterForm = ProductCategoryFilterForm(data=filter_data, request=request)
     supplier_filter_form: ProductSupplierFilterForm = ProductSupplierFilterForm(data=filter_data, request=request)
     order_days_form.is_valid()
     code_filter_form.is_valid()
+    model_filter_form.is_valid()
     name_filter_form.is_valid()
     category_filter_form.is_valid()
     supplier_filter_form.is_valid()
@@ -193,6 +200,7 @@ def populate_product_list_context(request, context):
     context['order_days_form'] = order_days_form
     context['items_per_page_form'] = items_per_page_form
     context['code_filter_form'] = code_filter_form
+    context['model_filter_form'] = model_filter_form
     context['name_filter_form'] = name_filter_form
     context['category_filter_form'] = category_filter_form
     context['supplier_filter_form'] = supplier_filter_form
