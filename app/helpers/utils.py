@@ -52,10 +52,10 @@ def product_row(obj):
         obj.name,
         category,
         suppliers,
-        getattr(obj, 'current_stock', None) or '-',
-        getattr(obj, 'avg_daily_demand', None) or '-',
-        getattr(obj, 'remainder_days', None) or '-',
-        getattr(obj, 'po_quantity', None) or '-'
+        getattr(obj, 'current_stock', None) or 0,
+        getattr(obj, 'avg_daily_demand', None) or 0,
+        getattr(obj, 'remainder_days', None) or 0,
+        getattr(obj, 'po_quantity', None) or 0
     ]
 
 def get_filter_dropdown_queryset(queryset: QuerySet, model: Model, related_name: str) -> list:
