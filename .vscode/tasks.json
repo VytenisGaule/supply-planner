@@ -180,6 +180,16 @@
                 "panel": "shared"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Django: Generate Demo Data",
+            "type": "shell",
+            "command": "./virtualEnvironment/bin/python",
+            "args": [
+                "manage.py",
+                "generate_demo_data"
+            ],
+            "group": "build"
         }
     ]
 }
